@@ -5,3 +5,4 @@ members = ["day-*"]
 [workspace.lints.clippy]
 all = "deny"
 pedantic = "deny"
+unwrap_used = "deny"
