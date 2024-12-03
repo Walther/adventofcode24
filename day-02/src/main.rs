@@ -4,10 +4,10 @@ fn main() {
     const INPUT: &str = include_str!("input.txt");
     let parsed = parse(INPUT);
 
-    let value = count_safe_reports(&parsed);
+    let value = part1(&parsed);
     println!("Part 1: {value}");
 
-    let value = count_dampenable_reports(&parsed);
+    let value = part2(&parsed);
     println!("Part 2: {value}");
 }
 
@@ -24,7 +24,7 @@ fn parse(input: &str) -> Vec<Vec<u32>> {
     reports
 }
 
-fn count_safe_reports(reports: &[Vec<u32>]) -> usize {
+fn part1(reports: &[Vec<u32>]) -> usize {
     reports
         .iter()
         .map(|report| is_safe_report(report))
@@ -43,7 +43,7 @@ fn is_safe_report(report: &[u32]) -> bool {
     is_strictly_monotone && is_gradual
 }
 
-fn count_dampenable_reports(reports: &[Vec<u32>]) -> usize {
+fn part2(reports: &[Vec<u32>]) -> usize {
     reports
         .iter()
         .filter(|&report| {
@@ -62,7 +62,6 @@ fn count_dampenable_reports(reports: &[Vec<u32>]) -> usize {
 
 #[cfg(test)]
 mod tests {
-    use crate::*;
     const INPUT: &str = r"7 6 4 2 1
 1 2 7 8 9
 9 7 6 2 1
@@ -73,15 +72,15 @@ mod tests {
 
     #[test]
     fn part1() {
-        let parsed = parse(INPUT);
-        let value = count_safe_reports(&parsed);
+        let parsed = crate::parse(INPUT);
+        let value = crate::part1(&parsed);
         assert_eq!(value, 2);
     }
 
     #[test]
     fn part2() {
-        let parsed = parse(INPUT);
-        let value = count_dampenable_reports(&parsed);
+        let parsed = crate::parse(INPUT);
+        let value = crate::part2(&parsed);
         assert_eq!(value, 4);
     }
 }

@@ -4,10 +4,10 @@ fn main() {
     const INPUT: &str = include_str!("input.txt");
     let parsed = parse(INPUT);
 
-    let value = method_1(&parsed);
+    let value = part1(&parsed);
     println!("Part 1: {value}");
 
-    let value = method_2(&parsed);
+    let value = part2(&parsed);
     println!("Part 2: {value}");
 }
 
@@ -20,12 +20,12 @@ enum Instruction {
 
 fn parse(input: &str) -> ParsedData {
     let mut instructions: Vec<Instruction> = Vec::new();
-    let instruction_regex = Regex::new(r"(mul\(\d+,\d+\))|(do\(\))|(don't\(\))")
+    let instruction_regex = Regex::new(r"mul\(\d+,\d+\)|do\(\)|don't\(\)")
         .expect("Failed to construct a regular expression");
     let mul_regex =
         Regex::new(r"mul\((\d+),(\d+)\)").expect("Failed to construct a regular expression");
 
-    for (_full, [instruction]) in instruction_regex.captures_iter(input).map(|c| c.extract()) {
+    for instruction in instruction_regex.find_iter(input).map(|m| m.as_str()) {
         match instruction {
             "do()" => {
                 instructions.push(Instruction::Do);
@@ -50,7 +50,7 @@ fn parse(input: &str) -> ParsedData {
     instructions
 }
 
-fn method_1(data: &ParsedData) -> u32 {
+fn part1(data: &ParsedData) -> u32 {
     let mut total = 0;
     for instruction in data {
         match instruction {
@@ -61,7 +61,7 @@ fn method_1(data: &ParsedData) -> u32 {
     total
 }
 
-fn method_2(data: &ParsedData) -> u32 {
+fn part2(data: &ParsedData) -> u32 {
     let mut total = 0;
     let mut enabled = true;
     for instruction in data {
@@ -80,7 +80,6 @@ fn method_2(data: &ParsedData) -> u32 {
 
 #[cfg(test)]
 mod tests {
-    use crate::*;
     const INPUT_1: &str =
         r"xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))";
     const INPUT_2: &str =
@@ -88,16 +87,16 @@ mod tests {
 
     #[test]
     fn part1() {
-        let parsed = parse(INPUT_1);
-        let value = method_1(&parsed);
+        let parsed = crate::parse(INPUT_1);
+        let value = crate::part1(&parsed);
         let expected = 161;
         assert_eq!(value, expected);
     }
 
     #[test]
     fn part2() {
-        let parsed = parse(INPUT_2);
-        let value = method_2(&parsed);
+        let parsed = crate::parse(INPUT_2);
+        let value = crate::part2(&parsed);
         let expected = 48;
         assert_eq!(value, expected);
     }

@@ -2,6 +2,11 @@
 default:
   @just --list --unsorted
 
+# Run all days
+@all:
+  cargo build --quiet --release
+  for day in `seq 1 $(fd -td "day*" | wc -l)`; do just day $day; done;
+
 # Run a specific day
 @day DAY:
   echo "Advent of Code Day {{DAY}}"
