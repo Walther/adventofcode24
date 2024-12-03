@@ -4,10 +4,10 @@ fn main() {
     const INPUT: &str = include_str!("input.txt");
     let (left, right) = parse(INPUT);
 
-    let value = total_distance(&left, &right);
+    let value = part1(&left, &right);
     println!("Part 1: {value}");
 
-    let value = similarity_score(&left, &right);
+    let value = part2(&left, &right);
     println!("Part 2: {value}");
 }
 
@@ -31,12 +31,12 @@ fn parse(input: &str) -> (Vec<u32>, Vec<u32>) {
 
 #[must_use]
 /// Given two lists of numbers, calculate pair-wise absolute differences, and return the sum of those differences.
-fn total_distance(left: &[u32], right: &[u32]) -> u32 {
+fn part1(left: &[u32], right: &[u32]) -> u32 {
     left.iter().zip(right).map(|(&l, &r)| l.abs_diff(r)).sum()
 }
 
 /// For each number in the left list, multiply it by the count of occurrences of itself in the right list, and return the sum of those products.
-fn similarity_score(left: &[u32], right: &[u32]) -> u32 {
+fn part2(left: &[u32], right: &[u32]) -> u32 {
     let mut right_counts: HashMap<u32, u32> = HashMap::new();
     for &id in right {
         *right_counts.entry(id).or_insert(0) += 1;
@@ -48,7 +48,6 @@ fn similarity_score(left: &[u32], right: &[u32]) -> u32 {
 
 #[cfg(test)]
 mod tests {
-    use crate::*;
     const INPUT: &str = r"3   4
 4   3
 2   5
@@ -59,15 +58,15 @@ mod tests {
 
     #[test]
     fn part1() {
-        let (left, right) = parse(INPUT);
-        let value = total_distance(&left, &right);
+        let (left, right) = crate::parse(INPUT);
+        let value = crate::part1(&left, &right);
         assert_eq!(value, 11);
     }
 
     #[test]
     fn part2() {
-        let (left, right) = parse(INPUT);
-        let value = similarity_score(&left, &right);
+        let (left, right) = crate::parse(INPUT);
+        let value = crate::part2(&left, &right);
         assert_eq!(value, 31);
     }
 }

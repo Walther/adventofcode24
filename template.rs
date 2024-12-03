@@ -1,36 +1,43 @@
 fn main() {
     const INPUT: &str = include_str!("input.txt");
-    let parsed = parse(&input);
+    let parsed = parse(INPUT);
 
-    let value = method_1(&parsed);
+    let value = part1(&parsed);
     println!("Part 1: {value}");
 
-    let value = method_2(&parsed);
+    let value = part2(&parsed);
     println!("Part 2: {value}");
 }
 
-fn parse(input: &str) {}
+type ParsedData = Vec<()>;
 
-fn method_1() {}
+fn parse(input: &str) -> ParsedData {}
 
-fn method_2() {}
+fn part1(data: &ParsedData) -> u32 {
+    1
+}
+
+fn part2(data: &ParsedData) -> u32 {
+    2
+}
 
 #[cfg(test)]
 mod tests {
-    use crate::*;
     const INPUT: &str = r"";
 
     #[test]
     fn part1() {
-        let parsed = parse(INPUT);
-        let value = method_1(parsed);
-        assert_eq!(value, 1);
+        let parsed = crate::parse(INPUT);
+        let value = crate::part1(&parsed);
+        let expected = 1;
+        assert_eq!(value, expected);
     }
 
     #[test]
     fn part2() {
-        let parsed = parse(INPUT);
-        let value = method_2(parsed);
-        assert_eq!(value, 2);
+        let parsed = crate::parse(INPUT);
+        let value = crate::part2(&parsed);
+        let expected = 2;
+        assert_eq!(value, expected);
     }
 }
