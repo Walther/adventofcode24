@@ -13,7 +13,7 @@ fn main() {
 
 type ParsedData = Vec<Instruction>;
 enum Instruction {
-    Mul(u32, u32),
+    Mul(usize, usize),
     Do,
     Dont,
 }
@@ -40,8 +40,8 @@ fn parse(input: &str) -> ParsedData {
                     .captures(instruction)
                     .expect("Unable to parse mul instruction")
                     .extract();
-                let l: u32 = mul_left.parse().expect("Unable to parse number");
-                let r: u32 = mul_right.parse().expect("Unable to parse number");
+                let l: usize = mul_left.parse().expect("Unable to parse number");
+                let r: usize = mul_right.parse().expect("Unable to parse number");
                 instructions.push(Instruction::Mul(l, r));
             }
         }
@@ -50,7 +50,7 @@ fn parse(input: &str) -> ParsedData {
     instructions
 }
 
-fn part1(data: &ParsedData) -> u32 {
+fn part1(data: &ParsedData) -> usize {
     let mut total = 0;
     for instruction in data {
         match instruction {
@@ -61,7 +61,7 @@ fn part1(data: &ParsedData) -> u32 {
     total
 }
 
-fn part2(data: &ParsedData) -> u32 {
+fn part2(data: &ParsedData) -> usize {
     let mut total = 0;
     let mut enabled = true;
     for instruction in data {

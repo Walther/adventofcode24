@@ -11,12 +11,12 @@ fn main() {
     println!("Part 2: {value}");
 }
 
-fn parse(input: &str) -> Vec<Vec<u32>> {
+fn parse(input: &str) -> Vec<Vec<usize>> {
     let mut reports = Vec::new();
     for line in input.lines() {
         let mut report = Vec::new();
         for level in line.split(' ') {
-            let number: u32 = level.parse().expect("Unable to parse level as an integer");
+            let number: usize = level.parse().expect("Unable to parse level as an integer");
             report.push(number);
         }
         reports.push(report);
@@ -24,7 +24,7 @@ fn parse(input: &str) -> Vec<Vec<u32>> {
     reports
 }
 
-fn part1(reports: &[Vec<u32>]) -> usize {
+fn part1(reports: &[Vec<usize>]) -> usize {
     reports
         .iter()
         .map(|report| is_safe_report(report))
@@ -32,7 +32,7 @@ fn part1(reports: &[Vec<u32>]) -> usize {
         .count()
 }
 
-fn is_safe_report(report: &[u32]) -> bool {
+fn is_safe_report(report: &[usize]) -> bool {
     let is_strictly_monotone =
         report.is_sorted_by(|a, b| a < b) || report.is_sorted_by(|a, b| a > b);
     let is_gradual = report
@@ -43,7 +43,7 @@ fn is_safe_report(report: &[u32]) -> bool {
     is_strictly_monotone && is_gradual
 }
 
-fn part2(reports: &[Vec<u32>]) -> usize {
+fn part2(reports: &[Vec<usize>]) -> usize {
     reports
         .iter()
         .filter(|&report| {

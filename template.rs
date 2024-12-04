@@ -13,11 +13,11 @@ type ParsedData = Vec<()>;
 
 fn parse(input: &str) -> ParsedData {}
 
-fn part1(data: &ParsedData) -> u32 {
+fn part1(_data: &ParsedData) -> usize {
     1
 }
 
-fn part2(data: &ParsedData) -> u32 {
+fn part2(_data: &ParsedData) -> usize {
     2
 }
 
