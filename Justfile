@@ -17,3 +17,12 @@ alias d := day
 @test:
   cargo nextest run --cargo-quiet
 alias t := test
+
+# Create a new day from the template
+@new:
+  day=$(($(fd -td "day*" | wc -l)+1)); \
+  name=day-$(printf "%02d" $day); \
+  cargo new --bin $name; \
+  cp template.rs $name/src/main.rs; \
+  touch $name/src/input.txt; \
+  code $name/src/*;

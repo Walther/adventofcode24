@@ -11,15 +11,15 @@ fn main() {
     println!("Part 2: {value}");
 }
 
-fn parse(input: &str) -> (Vec<u32>, Vec<u32>) {
+fn parse(input: &str) -> (Vec<usize>, Vec<usize>) {
     let mut left = Vec::new();
     let mut right = Vec::new();
     for line in input.lines() {
         let (l, r) = line
             .split_once("   ")
             .expect("Unable to split row into two numbers");
-        let l: u32 = l.parse().expect("Unable to parse left number");
-        let r: u32 = r.parse().expect("Unable to parse right number");
+        let l: usize = l.parse().expect("Unable to parse left number");
+        let r: usize = r.parse().expect("Unable to parse right number");
         left.push(l);
         right.push(r);
     }
@@ -31,13 +31,13 @@ fn parse(input: &str) -> (Vec<u32>, Vec<u32>) {
 
 #[must_use]
 /// Given two lists of numbers, calculate pair-wise absolute differences, and return the sum of those differences.
-fn part1(left: &[u32], right: &[u32]) -> u32 {
+fn part1(left: &[usize], right: &[usize]) -> usize {
     left.iter().zip(right).map(|(&l, &r)| l.abs_diff(r)).sum()
 }
 
 /// For each number in the left list, multiply it by the count of occurrences of itself in the right list, and return the sum of those products.
-fn part2(left: &[u32], right: &[u32]) -> u32 {
-    let mut right_counts: HashMap<u32, u32> = HashMap::new();
+fn part2(left: &[usize], right: &[usize]) -> usize {
+    let mut right_counts: HashMap<usize, usize> = HashMap::new();
     for &id in right {
         *right_counts.entry(id).or_insert(0) += 1;
     }
