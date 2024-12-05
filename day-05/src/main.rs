@@ -50,12 +50,6 @@ fn parse(input: &str) -> ParsedData {
     }
 }
 
-fn is_ordered(update: &Vec<usize>, rules: &[(usize, usize)]) -> bool {
-    let mut sorted: Vec<usize> = update.clone();
-    sorted.sort_by(|&a, &b| page_sort(a, b, rules));
-    sorted == *update
-}
-
 fn page_sort(a: usize, b: usize, rules: &[(usize, usize)]) -> Ordering {
     if rules.contains(&(a, b)) {
         return std::cmp::Ordering::Less;
@@ -67,10 +61,9 @@ fn page_sort(a: usize, b: usize, rules: &[(usize, usize)]) -> Ordering {
 }
 
 fn part1(data: &ParsedData) -> usize {
-    let ordered = data
-        .updates
-        .iter()
-        .filter(|update| is_ordered(update, &data.ordering_rules));
+    let ordered = data.updates.iter().filter(|update| {
+        update.is_sorted_by(|&a, &b| page_sort(a, b, &data.ordering_rules).is_le())
+    });
     let middle_pages = ordered.map(|update| {
         update
             .get(update.len() / 2)
@@ -80,10 +73,9 @@ fn part1(data: &ParsedData) -> usize {
 }
 
 fn part2(data: &ParsedData) -> usize {
-    let incorrectly_ordered = data
-        .updates
-        .iter()
-        .filter(|update| !is_ordered(update, &data.ordering_rules));
+    let incorrectly_ordered = data.updates.iter().filter(|update| {
+        !update.is_sorted_by(|&a, &b| page_sort(a, b, &data.ordering_rules).is_le())
+    });
     let mut fixed: Vec<_> = incorrectly_ordered.cloned().collect();
     fixed
         .iter_mut()
