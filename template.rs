@@ -11,7 +11,9 @@ fn main() {
 
 type ParsedData = Vec<()>;
 
-fn parse(input: &str) -> ParsedData {}
+fn parse(_input: &str) -> ParsedData {
+    Vec::new()
+}
 
 fn part1(_data: &ParsedData) -> usize {
     1

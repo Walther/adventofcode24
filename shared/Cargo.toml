@@ -1,10 +1,9 @@
 [package]
-name = "day-04"
+name = "shared"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-shared = { path = "../shared/" }
 
 [lints]
 workspace = true
