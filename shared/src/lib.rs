@@ -53,7 +53,7 @@ impl Maze {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Direction {
     NW,
     N,
@@ -80,7 +80,7 @@ pub struct Visitor<'a> {
     maze: &'a Maze,
     x: usize,
     y: usize,
-    visited: Vec<(usize, usize)>,
+    visited: Vec<((usize, usize), Direction)>,
     pockets: Vec<char>,
 }
 
@@ -94,7 +94,7 @@ impl<'a> Visitor<'a> {
     #[must_use]
     pub fn new(options: VisitorOptions, maze: &'a Maze, x: usize, y: usize) -> Self {
         let visited = match options.record_visited {
-            true => vec![(x, y)],
+            true => vec![((x, y), N)],
             false => Vec::new(),
         };
         let pockets = Vec::new();
@@ -171,7 +171,7 @@ impl<'a> Visitor<'a> {
         self.x = x;
         self.y = y;
         if self.options.record_visited {
-            self.visited.push((x, y));
+            self.visited.push(((x, y), direction));
         }
         self.get()
     }
@@ -211,7 +211,7 @@ impl<'a> Visitor<'a> {
     }
 
     #[must_use]
-    pub fn path(&self) -> Option<&Vec<(usize, usize)>> {
+    pub fn path(&self) -> Option<&Vec<((usize, usize), Direction)>> {
         match self.options.record_visited {
             true => Some(&self.visited),
             false => None,
@@ -219,14 +219,41 @@ impl<'a> Visitor<'a> {
     }
 
     #[must_use]
-    pub fn visited(&self) -> Option<Vec<(usize, usize)>> {
-        self.path()
-            .map(|path| path.iter().unique().copied().collect())
+    pub fn unique_visited(&self) -> Option<Vec<(usize, usize)>> {
+        let path = self.path()?;
+        Some(
+            path.iter()
+                .map(|((x, y), _direction)| (*x, *y))
+                .unique()
+                .collect(),
+        )
+    }
+
+    /// Checks that all visited location-direction pairs are unique.
+    ///
+    /// Computationally intense, slow!
+    #[must_use]
+    pub fn has_looped(&self) -> Option<bool> {
+        if !self.options.record_visited {
+            return None;
+        };
+        Some(!self.visited.iter().all_unique())
+    }
+
+    /// Checks if the upcoming location-direction pair already exists in the visited list.
+    ///
+    /// Computationally faster than `has_looped`, but only checks the upcoming step.
+    #[must_use]
+    pub fn deja_vu(&self, direction: Direction) -> bool {
+        let Some(next) = self.coordinate_in_direction(direction) else {
+            return false;
+        };
+        self.visited.contains(&(next, direction))
     }
 }
 
 #[cfg(test)]
-mod tests {
+mod maze {
     use super::*;
     const NUMPAD_MAZE_STR: &str = "123\n456\n789";
 
