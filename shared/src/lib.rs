@@ -24,7 +24,15 @@ impl Maze {
     }
 
     #[must_use]
-    pub fn find_all(&self, search: char) -> Vec<(&usize, &usize)> {
+    pub fn find(&self, search: char) -> Option<(usize, usize)> {
+        self.maze
+            .iter()
+            .find(|&((_, _), &character)| character == search)
+            .map(|((x, y), _)| (*x, *y))
+    }
+
+    #[must_use]
+    pub fn find_all(&self, search: char) -> Vec<(usize, usize)> {
         self.maze
             .iter()
             .filter(|&((_, _), character)| character == &search)
