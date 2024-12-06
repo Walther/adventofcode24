@@ -1,3 +1,6 @@
+use itertools::Itertools;
+
+#[derive(Clone)]
 pub struct Maze {
     maze: HashMap<(usize, usize), char>,
 }
@@ -9,7 +12,7 @@ impl FromStr for Maze {
         let mut maze = HashMap::new();
         for (row, contents) in s.lines().enumerate() {
             for (column, character) in contents.chars().enumerate() {
-                maze.insert((row, column), character);
+                maze.insert((column, row), character);
             }
         }
 
@@ -44,6 +47,10 @@ impl Maze {
     pub fn get(&self, x: usize, y: usize) -> Option<&char> {
         self.maze.get(&(x, y))
     }
+
+    pub fn upsert(&mut self, x: usize, y: usize, v: char) -> Option<char> {
+        self.maze.insert((x, y), v)
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -69,15 +76,41 @@ impl Direction {
 }
 
 pub struct Visitor<'a> {
+    options: VisitorOptions,
     maze: &'a Maze,
     x: usize,
     y: usize,
+    visited: Vec<(usize, usize)>,
+    pockets: Vec<char>,
+}
+
+#[derive(Default)]
+pub struct VisitorOptions {
+    pub record_visited: bool,
+    pub has_pockets: bool,
 }
 
 impl<'a> Visitor<'a> {
     #[must_use]
-    pub fn new(maze: &'a Maze, x: usize, y: usize) -> Self {
-        Self { maze, x, y }
+    pub fn new(options: VisitorOptions, maze: &'a Maze, x: usize, y: usize) -> Self {
+        let visited = match options.record_visited {
+            true => vec![(x, y)],
+            false => Vec::new(),
+        };
+        let pockets = Vec::new();
+        Self {
+            options,
+            maze,
+            x,
+            y,
+            visited,
+            pockets,
+        }
+    }
+
+    #[must_use]
+    pub fn position(&self) -> (usize, usize) {
+        (self.x, self.y)
     }
 
     #[must_use]
@@ -137,22 +170,29 @@ impl<'a> Visitor<'a> {
         let (x, y) = self.coordinate_in_direction(direction)?;
         self.x = x;
         self.y = y;
+        if self.options.record_visited {
+            self.visited.push((x, y));
+        }
         self.get()
     }
 
-    pub fn collect(&mut self, max_length: usize, direction: Direction) -> Option<String> {
-        let mut collection = String::new();
-        let grab = self.get()?;
-        collection.push(*grab);
+    pub fn collect(&mut self, max_length: usize, direction: Direction) -> Option<&Vec<char>> {
+        if !self.options.has_pockets {
+            return None;
+        };
 
-        while collection.len() < max_length {
-            match self.step(direction) {
-                Some(c) => collection.push(*c),
-                None => return Some(collection),
+        while self.pockets.len() < max_length {
+            let grab = self.get()?;
+            self.pockets.push(*grab);
+            match self.peek(direction) {
+                Some(_) => {
+                    self.step(direction);
+                }
+                None => return Some(&self.pockets),
             }
         }
 
-        Some(collection)
+        Some(&self.pockets)
     }
 
     #[must_use]
@@ -169,11 +209,33 @@ impl<'a> Visitor<'a> {
             self.peek(SE)?,
         ])
     }
+
+    #[must_use]
+    pub fn path(&self) -> Option<&Vec<(usize, usize)>> {
+        match self.options.record_visited {
+            true => Some(&self.visited),
+            false => None,
+        }
+    }
+
+    #[must_use]
+    pub fn visited(&self) -> Option<Vec<(usize, usize)>> {
+        self.path()
+            .map(|path| path.iter().unique().copied().collect())
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    const NUMPAD_MAZE_STR: &str = "123\n456\n789";
 
     #[test]
-    fn it_works() {}
+    fn surroundings() {
+        let maze: Maze = NUMPAD_MAZE_STR.parse().expect("Unable to parse maze");
+        let visitor = Visitor::new(VisitorOptions::default(), &maze, 1, 1);
+        let surroundings = visitor.surroundings().expect("No surroundings found");
+        let expected = [&'1', &'2', &'3', &'4', &'5', &'6', &'7', &'8', &'9'];
+        assert_eq!(surroundings, expected);
+    }
 }

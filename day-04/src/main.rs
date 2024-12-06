@@ -1,4 +1,4 @@
-use shared::{Direction, Maze, Visitor};
+use shared::{Direction, Maze, Visitor, VisitorOptions};
 
 fn main() {
     const INPUT: &str = include_str!("input.txt");
@@ -22,11 +22,19 @@ fn part1(data: &ParsedData) -> usize {
     let letter_x_coordinates = data.find_all('X');
     for (x, y) in letter_x_coordinates {
         for direction in Direction::iter() {
-            let mut visitor = Visitor::new(data, x, y);
+            let mut visitor = Visitor::new(
+                VisitorOptions {
+                    has_pockets: true,
+                    ..Default::default()
+                },
+                data,
+                x,
+                y,
+            );
             let collection = visitor.collect(4, direction);
             match collection {
-                Some(string) => {
-                    if string == *"XMAS" {
+                Some(collection) => {
+                    if *collection.iter().collect::<String>() == *"XMAS" {
                         xmas_count += 1;
                     }
                 }
@@ -41,7 +49,7 @@ fn part1(data: &ParsedData) -> usize {
 fn part2(data: &ParsedData) -> usize {
     let mut x_max_count = 0;
     for &(x, y) in data.all_coordinates() {
-        let visitor = Visitor::new(data, x, y);
+        let visitor = Visitor::new(VisitorOptions::default(), data, x, y);
         let surroundings = visitor.surroundings();
         match surroundings {
             Some(map) => {
