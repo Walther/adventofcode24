@@ -20,7 +20,7 @@ fn parse(input: &str) -> ParsedData {
 fn part1(data: &ParsedData) -> usize {
     let mut xmas_count = 0;
     let letter_x_coordinates = data.find_all('X');
-    for (&x, &y) in letter_x_coordinates {
+    for (x, y) in letter_x_coordinates {
         for direction in Direction::iter() {
             let mut visitor = Visitor::new(data, x, y);
             let collection = visitor.collect(4, direction);

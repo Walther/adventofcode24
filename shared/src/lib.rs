@@ -28,7 +28,7 @@ impl Maze {
         self.maze
             .iter()
             .filter(|&((_, _), character)| character == &search)
-            .map(|((x, y), _)| (x, y))
+            .map(|((x, y), _)| (*x, *y))
             .collect()
     }
 
