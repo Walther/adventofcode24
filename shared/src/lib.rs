@@ -27,6 +27,11 @@ impl Maze {
     }
 
     #[must_use]
+    pub fn all_values(&self) -> Vec<char> {
+        self.maze.values().copied().collect()
+    }
+
+    #[must_use]
     pub fn find(&self, search: char) -> Option<(usize, usize)> {
         self.maze
             .iter()
@@ -50,6 +55,22 @@ impl Maze {
 
     pub fn upsert(&mut self, x: usize, y: usize, v: char) -> Option<char> {
         self.maze.insert((x, y), v)
+    }
+
+    #[must_use]
+    pub fn contains_coordinate(&self, x: usize, y: usize) -> bool {
+        self.maze.contains_key(&(x, y))
+    }
+
+    #[must_use]
+    #[allow(clippy::cast_sign_loss)]
+    pub fn contains_coordinate_signed(&self, x: isize, y: isize) -> bool {
+        if x >= 0 && y >= 0 {
+            let x = x as usize;
+            let y = y as usize;
+            return self.maze.contains_key(&(x, y));
+        }
+        false
     }
 }
 
