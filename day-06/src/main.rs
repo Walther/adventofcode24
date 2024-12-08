@@ -34,19 +34,19 @@ fn part2(data: &ParsedData) -> usize {
             "Elapsed:   {elapsed_precise}\nProgress:  {bar} {pos}/{len}\nRemaining: {eta_precise}",
         )
         .expect("Unable to create progress bar style");
-    let looped: Vec<bool> = maze
+    let loops = maze
         .all_coordinates()
         .into_par_iter()
         .progress_with_style(style)
-        .map(|&coordinate| {
+        .filter(|&coordinate| {
             let mut obstructed_maze = maze.clone();
-            obstructed_maze.upsert(coordinate, '#');
+            obstructed_maze.upsert(*coordinate, '#');
             let (_steps, has_looped) = guard_walk(&obstructed_maze, start);
             has_looped
         })
-        .collect();
+        .count();
 
-    looped.into_iter().filter(|&l| l).count()
+    loops
 }
 
 fn remove_guard_marker(data: &Maze) -> (Maze, Coordinate) {
