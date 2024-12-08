@@ -2,7 +2,7 @@ use indicatif::{ParallelProgressIterator, ProgressStyle};
 use rayon::prelude::*;
 
 use shared::Direction::{E, N, S, W};
-use shared::{Maze, Visitor, VisitorOptions};
+use shared::{Coordinate, Maze, Visitor, VisitorOptions};
 
 fn main() {
     const INPUT: &str = include_str!("input.txt");
@@ -22,13 +22,13 @@ fn parse(input: &str) -> ParsedData {
 }
 
 fn part1(data: &ParsedData) -> usize {
-    let (maze, x, y) = remove_guard_marker(data);
-    let (steps, _has_looped) = guard_walk(&maze, x, y);
+    let (maze, start) = remove_guard_marker(data);
+    let (steps, _has_looped) = guard_walk(&maze, start);
     steps
 }
 
 fn part2(data: &ParsedData) -> usize {
-    let (maze, x, y) = remove_guard_marker(data);
+    let (maze, start) = remove_guard_marker(data);
     let style = ProgressStyle::default_bar()
         .template(
             "Elapsed:   {elapsed_precise}\nProgress:  {bar} {pos}/{len}\nRemaining: {eta_precise}",
@@ -38,10 +38,10 @@ fn part2(data: &ParsedData) -> usize {
         .all_coordinates()
         .into_par_iter()
         .progress_with_style(style)
-        .map(|&(obstruction_x, obstruction_y)| {
+        .map(|&coordinate| {
             let mut obstructed_maze = maze.clone();
-            obstructed_maze.upsert(obstruction_x, obstruction_y, '#');
-            let (_steps, has_looped) = guard_walk(&obstructed_maze, x, y);
+            obstructed_maze.upsert(coordinate, '#');
+            let (_steps, has_looped) = guard_walk(&obstructed_maze, start);
             has_looped
         })
         .collect();
@@ -49,19 +49,19 @@ fn part2(data: &ParsedData) -> usize {
     looped.into_iter().filter(|&l| l).count()
 }
 
-fn remove_guard_marker(data: &Maze) -> (Maze, isize, isize) {
+fn remove_guard_marker(data: &Maze) -> (Maze, Coordinate) {
     let mut maze = data.clone();
-    let (x, y) = maze.find('^').expect("Unable to find guard in the maze");
-    maze.upsert(x, y, '.');
-    (maze, x, y)
+    let coordinate = maze.find('^').expect("Unable to find guard in the maze");
+    maze.upsert(coordinate, '.');
+    (maze, coordinate)
 }
 
-fn guard_walk(maze: &Maze, x: isize, y: isize) -> (usize, bool) {
+fn guard_walk(maze: &Maze, coordinate: Coordinate) -> (usize, bool) {
     let visitor_options = VisitorOptions {
         record_visited: true,
         ..Default::default()
     };
-    let mut guard = Visitor::new(visitor_options, maze, x, y);
+    let mut guard = Visitor::new(visitor_options, maze, coordinate);
     let walk_directions = [N, E, S, W];
     let mut direction_index = 0;
     let mut direction = walk_directions[direction_index];

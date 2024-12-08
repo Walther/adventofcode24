@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use itertools::Itertools;
-use shared::Maze;
+use shared::{Coordinate, Displacement, Maze};
 
 fn main() {
     const INPUT: &str = include_str!("input.txt");
@@ -31,22 +31,19 @@ fn parse(input: &str) -> ParsedData {
     (maze, frequencies)
 }
 
-// FIXME: ugly casts. Not in a refactoring mood tonight.
-#[allow(clippy::cast_possible_wrap)]
 fn part1(data: &ParsedData) -> usize {
     let (maze, frequencies) = data;
-    let mut antinodes: HashSet<(isize, isize)> = HashSet::new();
+    let mut antinodes: HashSet<Coordinate> = HashSet::new();
     for &frequency in frequencies {
         let antennae = maze.find_all(frequency);
         for (a, b) in antennae.iter().tuple_combinations() {
-            let dx: isize = b.0 - a.0;
-            let dy: isize = b.1 - a.1;
-            let antinode_a = (a.0 - dx, a.1 - dy);
-            if maze.contains_coordinate(antinode_a.0, antinode_a.1) {
+            let delta: Displacement = b - a;
+            let antinode_a = a - delta;
+            if maze.contains_coordinate(antinode_a) {
                 antinodes.insert(antinode_a);
             }
-            let antinode_b = (b.0 + dx, b.1 + dy);
-            if maze.contains_coordinate(antinode_b.0, antinode_b.1) {
+            let antinode_b = b + delta;
+            if maze.contains_coordinate(antinode_b) {
                 antinodes.insert(antinode_b);
             }
         }
@@ -56,31 +53,27 @@ fn part1(data: &ParsedData) -> usize {
 }
 
 // FIXME: ugly repetition.
-#[allow(clippy::cast_possible_wrap)]
 fn part2(data: &ParsedData) -> usize {
     let (maze, frequencies) = data;
-    let mut antinodes: HashSet<(isize, isize)> = HashSet::new();
+    let mut antinodes: HashSet<Coordinate> = HashSet::new();
     for &frequency in frequencies {
         let antennae = maze.find_all(frequency);
-        for (a, b) in antennae.iter().tuple_combinations() {
-            let dx: isize = b.0 - a.0;
-            let dy: isize = b.1 - a.1;
-            let mut antinode_a = (a.0, a.1);
+        for (&a, &b) in antennae.iter().tuple_combinations() {
+            let delta: Displacement = b - a;
+            let mut antinode_a = a;
             loop {
-                if maze.contains_coordinate(antinode_a.0, antinode_a.1) {
+                if maze.contains_coordinate(antinode_a) {
                     antinodes.insert(antinode_a);
-                    antinode_a.0 -= dx;
-                    antinode_a.1 -= dy;
+                    antinode_a -= delta;
                     continue;
                 }
                 break;
             }
-            let mut antinode_b = (b.0, b.1);
+            let mut antinode_b = b;
             loop {
-                if maze.contains_coordinate(antinode_b.0, antinode_b.1) {
+                if maze.contains_coordinate(antinode_b) {
                     antinodes.insert(antinode_b);
-                    antinode_b.0 += dx;
-                    antinode_b.1 += dy;
+                    antinode_b += delta;
                     continue;
                 }
                 break;
