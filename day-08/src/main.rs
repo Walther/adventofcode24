@@ -39,14 +39,14 @@ fn part1(data: &ParsedData) -> usize {
     for &frequency in frequencies {
         let antennae = maze.find_all(frequency);
         for (a, b) in antennae.iter().tuple_combinations() {
-            let dx: isize = (b.0 as isize) - (a.0 as isize);
-            let dy: isize = (b.1 as isize) - (a.1 as isize);
-            let antinode_a = (a.0 as isize - dx, a.1 as isize - dy);
-            if maze.contains_coordinate_signed(antinode_a.0, antinode_a.1) {
+            let dx: isize = b.0 - a.0;
+            let dy: isize = b.1 - a.1;
+            let antinode_a = (a.0 - dx, a.1 - dy);
+            if maze.contains_coordinate(antinode_a.0, antinode_a.1) {
                 antinodes.insert(antinode_a);
             }
-            let antinode_b = (b.0 as isize + dx, b.1 as isize + dy);
-            if maze.contains_coordinate_signed(antinode_b.0, antinode_b.1) {
+            let antinode_b = (b.0 + dx, b.1 + dy);
+            if maze.contains_coordinate(antinode_b.0, antinode_b.1) {
                 antinodes.insert(antinode_b);
             }
         }
@@ -63,11 +63,11 @@ fn part2(data: &ParsedData) -> usize {
     for &frequency in frequencies {
         let antennae = maze.find_all(frequency);
         for (a, b) in antennae.iter().tuple_combinations() {
-            let dx: isize = (b.0 as isize) - (a.0 as isize);
-            let dy: isize = (b.1 as isize) - (a.1 as isize);
-            let mut antinode_a = (a.0 as isize, a.1 as isize);
+            let dx: isize = b.0 - a.0;
+            let dy: isize = b.1 - a.1;
+            let mut antinode_a = (a.0, a.1);
             loop {
-                if maze.contains_coordinate_signed(antinode_a.0, antinode_a.1) {
+                if maze.contains_coordinate(antinode_a.0, antinode_a.1) {
                     antinodes.insert(antinode_a);
                     antinode_a.0 -= dx;
                     antinode_a.1 -= dy;
@@ -75,9 +75,9 @@ fn part2(data: &ParsedData) -> usize {
                 }
                 break;
             }
-            let mut antinode_b = (b.0 as isize, b.1 as isize);
+            let mut antinode_b = (b.0, b.1);
             loop {
-                if maze.contains_coordinate_signed(antinode_b.0, antinode_b.1) {
+                if maze.contains_coordinate(antinode_b.0, antinode_b.1) {
                     antinodes.insert(antinode_b);
                     antinode_b.0 += dx;
                     antinode_b.1 += dy;

@@ -2,7 +2,7 @@ use itertools::Itertools;
 
 #[derive(Clone)]
 pub struct Maze {
-    maze: HashMap<(usize, usize), char>,
+    maze: HashMap<(isize, isize), char>,
 }
 
 impl FromStr for Maze {
@@ -12,7 +12,9 @@ impl FromStr for Maze {
         let mut maze = HashMap::new();
         for (row, contents) in s.lines().enumerate() {
             for (column, character) in contents.chars().enumerate() {
-                maze.insert((column, row), character);
+                // FIXME: ugly casts
+                #[allow(clippy::cast_possible_wrap)]
+                maze.insert((column as isize, row as isize), character);
             }
         }
 
@@ -22,7 +24,7 @@ impl FromStr for Maze {
 
 impl Maze {
     #[must_use]
-    pub fn all_coordinates(&self) -> Vec<&(usize, usize)> {
+    pub fn all_coordinates(&self) -> Vec<&(isize, isize)> {
         self.maze.keys().collect()
     }
 
@@ -32,7 +34,7 @@ impl Maze {
     }
 
     #[must_use]
-    pub fn find(&self, search: char) -> Option<(usize, usize)> {
+    pub fn find(&self, search: char) -> Option<(isize, isize)> {
         self.maze
             .iter()
             .find(|&((_, _), &character)| character == search)
@@ -40,7 +42,7 @@ impl Maze {
     }
 
     #[must_use]
-    pub fn find_all(&self, search: char) -> Vec<(usize, usize)> {
+    pub fn find_all(&self, search: char) -> Vec<(isize, isize)> {
         self.maze
             .iter()
             .filter(|&((_, _), character)| character == &search)
@@ -49,28 +51,17 @@ impl Maze {
     }
 
     #[must_use]
-    pub fn get(&self, x: usize, y: usize) -> Option<&char> {
+    pub fn get(&self, x: isize, y: isize) -> Option<&char> {
         self.maze.get(&(x, y))
     }
 
-    pub fn upsert(&mut self, x: usize, y: usize, v: char) -> Option<char> {
+    pub fn upsert(&mut self, x: isize, y: isize, v: char) -> Option<char> {
         self.maze.insert((x, y), v)
     }
 
     #[must_use]
-    pub fn contains_coordinate(&self, x: usize, y: usize) -> bool {
+    pub fn contains_coordinate(&self, x: isize, y: isize) -> bool {
         self.maze.contains_key(&(x, y))
-    }
-
-    #[must_use]
-    #[allow(clippy::cast_sign_loss)]
-    pub fn contains_coordinate_signed(&self, x: isize, y: isize) -> bool {
-        if x >= 0 && y >= 0 {
-            let x = x as usize;
-            let y = y as usize;
-            return self.maze.contains_key(&(x, y));
-        }
-        false
     }
 }
 
@@ -99,9 +90,9 @@ impl Direction {
 pub struct Visitor<'a> {
     options: VisitorOptions,
     maze: &'a Maze,
-    x: usize,
-    y: usize,
-    visited: Vec<((usize, usize), Direction)>,
+    x: isize,
+    y: isize,
+    visited: Vec<((isize, isize), Direction)>,
     pockets: Vec<char>,
 }
 
@@ -113,7 +104,7 @@ pub struct VisitorOptions {
 
 impl<'a> Visitor<'a> {
     #[must_use]
-    pub fn new(options: VisitorOptions, maze: &'a Maze, x: usize, y: usize) -> Self {
+    pub fn new(options: VisitorOptions, maze: &'a Maze, x: isize, y: isize) -> Self {
         let visited = match options.record_visited {
             true => vec![((x, y), N)],
             false => Vec::new(),
@@ -130,7 +121,7 @@ impl<'a> Visitor<'a> {
     }
 
     #[must_use]
-    pub fn position(&self) -> (usize, usize) {
+    pub fn position(&self) -> (isize, isize) {
         (self.x, self.y)
     }
 
@@ -140,7 +131,7 @@ impl<'a> Visitor<'a> {
     }
 
     #[must_use]
-    pub fn coordinate_in_direction(&self, direction: Direction) -> Option<(usize, usize)> {
+    pub fn coordinate_in_direction(&self, direction: Direction) -> Option<(isize, isize)> {
         let x;
         let y;
         match direction {
@@ -232,7 +223,7 @@ impl<'a> Visitor<'a> {
     }
 
     #[must_use]
-    pub fn path(&self) -> Option<&Vec<((usize, usize), Direction)>> {
+    pub fn path(&self) -> Option<&Vec<((isize, isize), Direction)>> {
         match self.options.record_visited {
             true => Some(&self.visited),
             false => None,
@@ -240,7 +231,7 @@ impl<'a> Visitor<'a> {
     }
 
     #[must_use]
-    pub fn unique_visited(&self) -> Option<Vec<(usize, usize)>> {
+    pub fn unique_visited(&self) -> Option<Vec<(isize, isize)>> {
         let path = self.path()?;
         Some(
             path.iter()

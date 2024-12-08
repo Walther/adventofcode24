@@ -49,14 +49,14 @@ fn part2(data: &ParsedData) -> usize {
     looped.into_iter().filter(|&l| l).count()
 }
 
-fn remove_guard_marker(data: &Maze) -> (Maze, usize, usize) {
+fn remove_guard_marker(data: &Maze) -> (Maze, isize, isize) {
     let mut maze = data.clone();
     let (x, y) = maze.find('^').expect("Unable to find guard in the maze");
     maze.upsert(x, y, '.');
     (maze, x, y)
 }
 
-fn guard_walk(maze: &Maze, x: usize, y: usize) -> (usize, bool) {
+fn guard_walk(maze: &Maze, x: isize, y: isize) -> (usize, bool) {
     let visitor_options = VisitorOptions {
         record_visited: true,
         ..Default::default()
