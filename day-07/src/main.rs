@@ -29,32 +29,27 @@ fn parse(input: &str) -> ParsedData {
 }
 
 fn part1(data: &ParsedData) -> usize {
-    total_calibration(data, false)
+    total_calibration(data, &[&operator_sum, &operator_product])
 }
 
 fn part2(data: &ParsedData) -> usize {
-    total_calibration(data, true)
+    total_calibration(data, &[&operator_sum, &operator_product, &operator_concat])
 }
 
-fn total_calibration(data: &ParsedData, concats: bool) -> usize {
+fn total_calibration(data: &ParsedData, operators: &[&dyn Fn(usize, usize) -> usize]) -> usize {
     let mut total_calibration_result = 0;
     for (test_value, numbers) in data {
         let mut numbers: VecDeque<usize> = numbers.clone().into();
         let mut possible_totals = vec![numbers.pop_front().expect("Missing numbers in equation")];
 
         while let Some(n) = numbers.pop_front() {
-            let sums: Vec<usize> = possible_totals.iter().map(|t| t + n).collect();
-            let products: Vec<usize> = possible_totals.iter().map(|t| t * n).collect();
-            if concats {
-                let concats: Vec<usize> = possible_totals
-                    .iter()
-                    .map(|t| t * 10_usize.pow(n.ilog10() + 1) + n)
-                    .collect();
-
-                possible_totals = [sums, products, concats].concat();
-            } else {
-                possible_totals = [sums, products].concat();
+            let mut new_totals = Vec::new();
+            for &operator in operators {
+                let mut results: Vec<usize> =
+                    possible_totals.iter().map(|&t| operator(t, n)).collect();
+                new_totals.append(&mut results);
             }
+            possible_totals = new_totals;
         }
 
         if possible_totals.contains(test_value) {
@@ -65,8 +60,22 @@ fn total_calibration(data: &ParsedData, concats: bool) -> usize {
     total_calibration_result
 }
 
+fn operator_sum(a: usize, b: usize) -> usize {
+    a + b
+}
+
+fn operator_product(a: usize, b: usize) -> usize {
+    a * b
+}
+
+fn operator_concat(a: usize, b: usize) -> usize {
+    a * 10_usize.pow(b.ilog10() + 1) + b
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::operator_concat;
+
     const INPUT: &str = r"190: 10 19
 3267: 81 40 27
 83: 17 5
@@ -92,5 +101,14 @@ mod tests {
         let value = crate::part2(&parsed);
         let expected = 11387;
         assert_eq!(value, expected);
+    }
+
+    #[test]
+    fn concatenation() {
+        let a = 123;
+        let b = 456;
+        let concat = operator_concat(a, b);
+        let expected = 123_456;
+        assert_eq!(concat, expected);
     }
 }

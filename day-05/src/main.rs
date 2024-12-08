@@ -1,4 +1,4 @@
-use std::cmp::Ordering;
+use std::cmp::Ordering::{self, Equal, Greater, Less};
 
 fn main() {
     const INPUT: &str = include_str!("input.txt");
@@ -52,12 +52,12 @@ fn parse(input: &str) -> ParsedData {
 
 fn page_sort(a: usize, b: usize, rules: &[(usize, usize)]) -> Ordering {
     if rules.contains(&(a, b)) {
-        return std::cmp::Ordering::Less;
+        return Less;
     }
     if rules.contains(&(b, a)) {
-        return std::cmp::Ordering::Greater;
+        return Greater;
     }
-    std::cmp::Ordering::Equal
+    Equal
 }
 
 fn part1(data: &ParsedData) -> usize {

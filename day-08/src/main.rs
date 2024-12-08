@@ -36,49 +36,41 @@ fn part1(data: &ParsedData) -> usize {
     let mut antinodes: HashSet<Coordinate> = HashSet::new();
     for &frequency in frequencies {
         let antennae = maze.find_all(frequency);
-        for (a, b) in antennae.iter().tuple_combinations() {
+        antennae.iter().permutations(2).for_each(|permutation| {
+            let [a, b] = permutation[..] else {
+                panic!("Unable to parse permutation");
+            };
             let delta: Displacement = b - a;
-            let antinode_a = a - delta;
-            if maze.contains_coordinate(antinode_a) {
-                antinodes.insert(antinode_a);
+            let antinode = a - delta;
+            if maze.contains_coordinate(antinode) {
+                antinodes.insert(antinode);
             }
-            let antinode_b = b + delta;
-            if maze.contains_coordinate(antinode_b) {
-                antinodes.insert(antinode_b);
-            }
-        }
+        });
     }
 
     antinodes.len()
 }
 
-// FIXME: ugly repetition.
 fn part2(data: &ParsedData) -> usize {
     let (maze, frequencies) = data;
     let mut antinodes: HashSet<Coordinate> = HashSet::new();
     for &frequency in frequencies {
         let antennae = maze.find_all(frequency);
-        for (&a, &b) in antennae.iter().tuple_combinations() {
+        antennae.iter().permutations(2).for_each(|permutation| {
+            let [&a, &b] = permutation[..] else {
+                panic!("Unable to parse permutation");
+            };
             let delta: Displacement = b - a;
-            let mut antinode_a = a;
+            let mut antinode = a;
             loop {
-                if maze.contains_coordinate(antinode_a) {
-                    antinodes.insert(antinode_a);
-                    antinode_a -= delta;
+                if maze.contains_coordinate(antinode) {
+                    antinodes.insert(antinode);
+                    antinode -= delta;
                     continue;
                 }
                 break;
             }
-            let mut antinode_b = b;
-            loop {
-                if maze.contains_coordinate(antinode_b) {
-                    antinodes.insert(antinode_b);
-                    antinode_b += delta;
-                    continue;
-                }
-                break;
-            }
-        }
+        });
     }
 
     antinodes.len()

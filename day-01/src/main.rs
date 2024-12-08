@@ -2,16 +2,18 @@ use std::collections::HashMap;
 
 fn main() {
     const INPUT: &str = include_str!("input.txt");
-    let (left, right) = parse(INPUT);
+    let parsed = parse(INPUT);
 
-    let value = part1(&left, &right);
+    let value = part1(&parsed);
     println!("Part 1: {value}");
 
-    let value = part2(&left, &right);
+    let value = part2(&parsed);
     println!("Part 2: {value}");
 }
 
-fn parse(input: &str) -> (Vec<usize>, Vec<usize>) {
+type ParsedData = (Vec<usize>, Vec<usize>);
+
+fn parse(input: &str) -> ParsedData {
     let mut left = Vec::new();
     let mut right = Vec::new();
     for line in input.lines() {
@@ -31,12 +33,14 @@ fn parse(input: &str) -> (Vec<usize>, Vec<usize>) {
 
 #[must_use]
 /// Given two lists of numbers, calculate pair-wise absolute differences, and return the sum of those differences.
-fn part1(left: &[usize], right: &[usize]) -> usize {
+fn part1(data: &ParsedData) -> usize {
+    let (left, right) = data;
     left.iter().zip(right).map(|(&l, &r)| l.abs_diff(r)).sum()
 }
 
 /// For each number in the left list, multiply it by the count of occurrences of itself in the right list, and return the sum of those products.
-fn part2(left: &[usize], right: &[usize]) -> usize {
+fn part2(data: &ParsedData) -> usize {
+    let (left, right) = data;
     let mut right_counts: HashMap<usize, usize> = HashMap::new();
     for &id in right {
         *right_counts.entry(id).or_insert(0) += 1;
@@ -58,15 +62,15 @@ mod tests {
 
     #[test]
     fn part1() {
-        let (left, right) = crate::parse(INPUT);
-        let value = crate::part1(&left, &right);
+        let parsed = crate::parse(INPUT);
+        let value = crate::part1(&parsed);
         assert_eq!(value, 11);
     }
 
     #[test]
     fn part2() {
-        let (left, right) = crate::parse(INPUT);
-        let value = crate::part2(&left, &right);
+        let parsed = crate::parse(INPUT);
+        let value = crate::part2(&parsed);
         assert_eq!(value, 31);
     }
 }

@@ -11,7 +11,10 @@ fn main() {
     println!("Part 2: {value}");
 }
 
-fn parse(input: &str) -> Vec<Vec<usize>> {
+type Report = Vec<usize>;
+type ParsedData = Vec<Report>;
+
+fn parse(input: &str) -> ParsedData {
     let mut reports = Vec::new();
     for line in input.lines() {
         let mut report = Vec::new();
@@ -24,15 +27,13 @@ fn parse(input: &str) -> Vec<Vec<usize>> {
     reports
 }
 
-fn part1(reports: &[Vec<usize>]) -> usize {
-    reports
-        .iter()
-        .map(|report| is_safe_report(report))
-        .filter(|&bool| bool)
-        .count()
+fn part1(data: &ParsedData) -> usize {
+    data.iter().filter(is_safe_report).count()
 }
 
-fn is_safe_report(report: &[usize]) -> bool {
+// TODO: how to make clippy happier while keeping the filter above neat?
+#[allow(clippy::trivially_copy_pass_by_ref)]
+fn is_safe_report(report: &&Report) -> bool {
     let is_strictly_monotone =
         report.is_sorted_by(|a, b| a < b) || report.is_sorted_by(|a, b| a > b);
     let is_gradual = report
@@ -43,15 +44,14 @@ fn is_safe_report(report: &[usize]) -> bool {
     is_strictly_monotone && is_gradual
 }
 
-fn part2(reports: &[Vec<usize>]) -> usize {
-    reports
-        .iter()
+fn part2(data: &ParsedData) -> usize {
+    data.iter()
         .filter(|&report| {
             // NOTE: brute force solution
             for i in 0..(report.len()) {
                 let mut dampened_report = report.clone();
                 dampened_report.remove(i);
-                if is_safe_report(&dampened_report) {
+                if is_safe_report(&&dampened_report) {
                     return true;
                 }
             }
