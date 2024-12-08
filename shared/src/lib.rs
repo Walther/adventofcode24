@@ -1,8 +1,12 @@
 use itertools::Itertools;
+use nalgebra::{Point2, Vector2};
+
+pub type Coordinate = Point2<isize>;
+pub type Displacement = Vector2<isize>;
 
 #[derive(Clone)]
 pub struct Maze {
-    maze: HashMap<(usize, usize), char>,
+    maze: HashMap<Point2<isize>, char>,
 }
 
 impl FromStr for Maze {
@@ -12,7 +16,13 @@ impl FromStr for Maze {
         let mut maze = HashMap::new();
         for (row, contents) in s.lines().enumerate() {
             for (column, character) in contents.chars().enumerate() {
-                maze.insert((column, row), character);
+                // FIXME: ugly casts
+                #[allow(clippy::cast_possible_wrap)]
+                let coordinate = Coordinate::new(
+                    column.try_into().expect("Number conversion error"),
+                    row.try_into().expect("Number conversion error"),
+                );
+                maze.insert(coordinate, character);
             }
         }
 
@@ -22,34 +32,44 @@ impl FromStr for Maze {
 
 impl Maze {
     #[must_use]
-    pub fn all_coordinates(&self) -> Vec<&(usize, usize)> {
+    pub fn all_coordinates(&self) -> Vec<&Coordinate> {
         self.maze.keys().collect()
     }
 
     #[must_use]
-    pub fn find(&self, search: char) -> Option<(usize, usize)> {
-        self.maze
-            .iter()
-            .find(|&((_, _), &character)| character == search)
-            .map(|((x, y), _)| (*x, *y))
+    pub fn all_values(&self) -> Vec<char> {
+        self.maze.values().copied().collect()
     }
 
     #[must_use]
-    pub fn find_all(&self, search: char) -> Vec<(usize, usize)> {
+    pub fn find(&self, search: char) -> Option<Coordinate> {
         self.maze
             .iter()
-            .filter(|&((_, _), character)| character == &search)
-            .map(|((x, y), _)| (*x, *y))
+            .find(|(_, &character)| character == search)
+            .map(|(&coordinate, _)| coordinate)
+    }
+
+    #[must_use]
+    pub fn find_all(&self, search: char) -> Vec<Coordinate> {
+        self.maze
+            .iter()
+            .filter(|(_, &character)| character == search)
+            .map(|(&coordinate, _)| coordinate)
             .collect()
     }
 
     #[must_use]
-    pub fn get(&self, x: usize, y: usize) -> Option<&char> {
-        self.maze.get(&(x, y))
+    pub fn get(&self, coordinate: Coordinate) -> Option<&char> {
+        self.maze.get(&coordinate)
     }
 
-    pub fn upsert(&mut self, x: usize, y: usize, v: char) -> Option<char> {
-        self.maze.insert((x, y), v)
+    pub fn upsert(&mut self, coordinate: Coordinate, v: char) -> Option<char> {
+        self.maze.insert(coordinate, v)
+    }
+
+    #[must_use]
+    pub fn contains_coordinate(&self, coordinate: Coordinate) -> bool {
+        self.maze.contains_key(&coordinate)
     }
 }
 
@@ -78,9 +98,8 @@ impl Direction {
 pub struct Visitor<'a> {
     options: VisitorOptions,
     maze: &'a Maze,
-    x: usize,
-    y: usize,
-    visited: Vec<((usize, usize), Direction)>,
+    coordinate: Coordinate,
+    visited: Vec<(Coordinate, Direction)>,
     pockets: Vec<char>,
 }
 
@@ -92,86 +111,85 @@ pub struct VisitorOptions {
 
 impl<'a> Visitor<'a> {
     #[must_use]
-    pub fn new(options: VisitorOptions, maze: &'a Maze, x: usize, y: usize) -> Self {
+    pub fn new(options: VisitorOptions, maze: &'a Maze, coordinate: Coordinate) -> Self {
         let visited = match options.record_visited {
-            true => vec![((x, y), N)],
+            true => vec![(coordinate, N)],
             false => Vec::new(),
         };
         let pockets = Vec::new();
         Self {
             options,
             maze,
-            x,
-            y,
+            coordinate,
             visited,
             pockets,
         }
     }
 
     #[must_use]
-    pub fn position(&self) -> (usize, usize) {
-        (self.x, self.y)
+    pub fn position(&self) -> Coordinate {
+        self.coordinate
     }
 
     #[must_use]
     pub fn get(&self) -> Option<&char> {
-        self.maze.get(self.x, self.y)
+        self.maze.get(self.coordinate)
     }
 
     #[must_use]
-    pub fn coordinate_in_direction(&self, direction: Direction) -> Option<(usize, usize)> {
+    pub fn coordinate_in_direction(&self, direction: Direction) -> Option<Coordinate> {
         let x;
         let y;
         match direction {
             Direction::NW => {
-                x = self.x.checked_sub(1)?;
-                y = self.y.checked_sub(1)?;
+                x = self.coordinate.x.checked_sub(1)?;
+                y = self.coordinate.y.checked_sub(1)?;
             }
             Direction::N => {
-                x = self.x;
-                y = self.y.checked_sub(1)?;
+                x = self.coordinate.x;
+                y = self.coordinate.y.checked_sub(1)?;
             }
             Direction::NE => {
-                x = self.x.checked_add(1)?;
-                y = self.y.checked_sub(1)?;
+                x = self.coordinate.x.checked_add(1)?;
+                y = self.coordinate.y.checked_sub(1)?;
             }
             Direction::W => {
-                x = self.x.checked_sub(1)?;
-                y = self.y;
+                x = self.coordinate.x.checked_sub(1)?;
+                y = self.coordinate.y;
             }
             Direction::E => {
-                x = self.x.checked_add(1)?;
-                y = self.y;
+                x = self.coordinate.x.checked_add(1)?;
+                y = self.coordinate.y;
             }
             Direction::SW => {
-                x = self.x.checked_sub(1)?;
-                y = self.y.checked_add(1)?;
+                x = self.coordinate.x.checked_sub(1)?;
+                y = self.coordinate.y.checked_add(1)?;
             }
             Direction::S => {
-                x = self.x;
-                y = self.y.checked_add(1)?;
+                x = self.coordinate.x;
+                y = self.coordinate.y.checked_add(1)?;
             }
             Direction::SE => {
-                x = self.x.checked_add(1)?;
-                y = self.y.checked_add(1)?;
+                x = self.coordinate.x.checked_add(1)?;
+                y = self.coordinate.y.checked_add(1)?;
             }
         }
-
-        Some((x, y))
+        let coordinate = Coordinate::new(x, y);
+        Some(coordinate)
     }
 
     #[must_use]
     pub fn peek(&self, direction: Direction) -> Option<&char> {
-        let (x, y) = self.coordinate_in_direction(direction)?;
-        self.maze.get(x, y)
+        let coordinate = self.coordinate_in_direction(direction)?;
+        self.maze.get(coordinate)
     }
 
     pub fn step(&mut self, direction: Direction) -> Option<&char> {
-        let (x, y) = self.coordinate_in_direction(direction)?;
-        self.x = x;
-        self.y = y;
+        let coordinate = self.coordinate_in_direction(direction)?;
+        self.coordinate.x = coordinate.x;
+        self.coordinate.y = coordinate.y;
         if self.options.record_visited {
-            self.visited.push(((x, y), direction));
+            self.visited.push((coordinate, direction));
         }
         self.get()
     }
@@ -211,7 +229,7 @@ impl<'a> Visitor<'a> {
     }
 
     #[must_use]
-    pub fn path(&self) -> Option<&Vec<((usize, usize), Direction)>> {
+    pub fn path(&self) -> Option<&Vec<(Coordinate, Direction)>> {
         match self.options.record_visited {
             true => Some(&self.visited),
             false => None,
@@ -219,11 +237,11 @@ impl<'a> Visitor<'a> {
     }
 
     #[must_use]
-    pub fn unique_visited(&self) -> Option<Vec<(usize, usize)>> {
+    pub fn unique_visited(&self) -> Option<Vec<Coordinate>> {
         let path = self.path()?;
         Some(
             path.iter()
-                .map(|((x, y), _direction)| (*x, *y))
+                .map(|(coordinate, _direction)| *coordinate)
                 .unique()
                 .collect(),
         )
@@ -260,7 +278,8 @@ mod maze {
     #[test]
     fn surroundings() {
         let maze: Maze = NUMPAD_MAZE_STR.parse().expect("Unable to parse maze");
-        let visitor = Visitor::new(VisitorOptions::default(), &maze, 1, 1);
+        let start: Coordinate = Coordinate::new(1, 1);
+        let visitor = Visitor::new(VisitorOptions::default(), &maze, start);
         let surroundings = visitor.surroundings().expect("No surroundings found");
         let expected = [&'1', &'2', &'3', &'4', &'5', &'6', &'7', &'8', &'9'];
         assert_eq!(surroundings, expected);
