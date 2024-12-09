@@ -39,13 +39,13 @@ fn parse(input: &str) -> ParsedData {
 fn part1(data: &ParsedData) -> usize {
     let mut disk = data.clone();
     disk.compact_fragmented().expect("Compacting failed");
-    disk.checksum().expect("Checksum failed")
+    disk.checksum()
 }
 
 fn part2(data: &ParsedData) -> usize {
     let mut disk = data.clone();
     disk.compact_non_fragmented().expect("Compacting failed");
-    disk.checksum().expect("Checksum failed")
+    disk.checksum()
 }
 
 #[cfg(test)]
