@@ -67,7 +67,7 @@ fn guard_walk(maze: &Maze, coordinate: Coordinate) -> (usize, bool) {
     let mut direction = walk_directions[direction_index];
     let mut has_looped = false;
     while let Some(forward) = guard.peek(direction) {
-        if guard.deja_vu(direction) {
+        if guard.has_looped() {
             has_looped = true;
             break;
         }
@@ -78,10 +78,7 @@ fn guard_walk(maze: &Maze, coordinate: Coordinate) -> (usize, bool) {
         }
         guard.step(direction);
     }
-    let steps = guard
-        .unique_visited()
-        .expect("Guard path not recorded")
-        .len();
+    let steps = guard.visited_coordinates().len();
     (steps, has_looped)
 }
 
