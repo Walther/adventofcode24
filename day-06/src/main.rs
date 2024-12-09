@@ -1,8 +1,8 @@
 use indicatif::{ParallelProgressIterator, ProgressStyle};
 use rayon::prelude::*;
 
-use shared::Direction::{E, N, S, W};
-use shared::{Coordinate, Maze, Visitor, VisitorOptions};
+use shared::maze::Direction::{E, N, S, W};
+use shared::maze::{Coordinate, Maze, Visitor, VisitorOptions};
 
 fn main() {
     const INPUT: &str = include_str!("input.txt");

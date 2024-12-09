@@ -1,4 +1,4 @@
-use shared::{Coordinate, Direction, Maze, Visitor, VisitorOptions};
+use shared::maze::{Coordinate, Direction, Maze, Visitor, VisitorOptions};
 
 fn main() {
     const INPUT: &str = include_str!("input.txt");
