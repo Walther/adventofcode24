@@ -13,8 +13,8 @@ pub type FileId = u64;
 
 #[derive(Default, Clone)]
 pub struct Disk {
-    pub contents: HashMap<Position, Block>,
-    pub written: u64,
+    contents: HashMap<Position, Block>,
+    written: u64,
 }
 
 impl Disk {
@@ -25,8 +25,15 @@ impl Disk {
     }
 
     /// Get the block at the given position. Returns None if the position is outside the disk.
-    pub fn get(&self, position: u64) -> Option<Block> {
-        self.contents.get(&position).copied()
+    pub fn get(&self, position: Position) -> Result<Block, Error> {
+        self.contents
+            .get(&position)
+            .ok_or(PositionNotFound)
+            .copied()
+    }
+
+    pub fn write(&mut self, position: Position, block: Block) -> Result<Block, Error> {
+        self.contents.insert(position, block).ok_or(WriteFailed)
     }
 
     /// Remove all blocks with the given `FileId`
@@ -39,37 +46,36 @@ impl Disk {
     }
 
     /// Swap the values at the given two positions, if they exist on the disk.
-    // FIXME: should probably return Result instead, but the ?s become annoying
-    pub fn swap(&mut self, position_a: Position, position_b: Position) -> Option<()> {
-        let &block_a = self.contents.get(&position_a)?;
-        let &block_b = self.contents.get(&position_b)?;
+    pub fn swap(&mut self, position_a: Position, position_b: Position) -> Result<(), Error> {
+        let block_a = self.get(position_a)?;
+        let block_b = self.get(position_b)?;
 
-        self.contents.insert(position_a, block_b)?;
-        self.contents.insert(position_b, block_a)?;
+        self.write(position_a, block_b)?;
+        self.write(position_b, block_a)?;
 
-        Some(())
+        Ok(())
     }
 
     /// Find the next empty position on the disk from the starting position `from`, inclusive.
-    pub fn next_empty(&self, from: Position) -> Option<Position> {
+    pub fn next_empty(&self, from: Position) -> Result<Position, Error> {
         for position in from..self.written {
             match self.contents.get(&position) {
-                Some(None) => return Some(position),
+                Some(None) => return Ok(position),
                 Some(Some(_file_id)) => continue,
                 None => unreachable!(),
             }
         }
-        None
+        Err(EmptyNotFound)
     }
 
     /// Find the next empty position on the disk with the contiguous length of `length` from the starting position `from`, inclusive.
-    pub fn next_empty_contiguous(&self, from: Position, length: u64) -> Option<Position> {
+    pub fn next_empty_contiguous(&self, from: Position, length: u64) -> Result<Position, Error> {
         let mut offset = from;
         loop {
             offset = self.next_empty(offset)?;
             let mut contiguous = true;
             'inner: for position in offset..(offset + length) {
-                if let Some(Some(_nonempty)) = self.get(position) {
+                if let Some(_nonempty) = self.get(position)? {
                     contiguous = false;
                     offset = position;
                     break 'inner;
@@ -77,21 +83,21 @@ impl Disk {
             }
 
             if contiguous {
-                return Some(offset);
+                return Ok(offset);
             }
         }
     }
 
     /// Find the last non-empty block on the disk.
-    pub fn last_nonempty(&self) -> Option<Position> {
+    pub fn last_nonempty(&self) -> Result<Position, Error> {
         for position in (0..self.written).rev() {
             match self.contents.get(&position) {
-                Some(Some(_file_id)) => return Some(position),
+                Some(Some(_file_id)) => return Ok(position),
                 Some(None) => continue,
                 None => unreachable!(),
             }
         }
-        None
+        Err(EmptyNotFound)
     }
 
     /// Get the file length for the file with the specified `FileId`
@@ -103,42 +109,38 @@ impl Disk {
     }
 
     /// Find the `Position` of the first block of the file with the specified `FileId`
-    pub fn file_start(&self, file_id: FileId) -> Option<Position> {
+    pub fn file_start(&self, file_id: FileId) -> Result<Position, Error> {
         for position in 0..self.written {
             match self.contents.get(&position) {
                 Some(Some(id)) => {
                     if *id == file_id {
-                        return Some(position);
+                        return Ok(position);
                     }
                 }
                 Some(None) => continue,
                 None => unreachable!(),
             }
         }
-        None
+        Err(FileNotFound)
     }
 
     /// Compact the disk by moving the last non-empty block into the first empty block,
     /// looping until all empty blocks are at the end of the disk.
-    pub fn compact_fragmented(&mut self) {
+    pub fn compact_fragmented(&mut self) -> Result<(), Error> {
         loop {
-            let Some(first_empty) = self.next_empty(0) else {
-                break;
-            };
-            let Some(last_nonempty) = self.last_nonempty() else {
-                break;
-            };
+            let first_empty = self.next_empty(0)?;
+            let last_nonempty = self.last_nonempty()?;
             if first_empty < last_nonempty {
-                self.swap(first_empty, last_nonempty);
+                self.swap(first_empty, last_nonempty)?;
             } else {
-                break;
+                break Ok(());
             }
         }
     }
 
     /// Compact the disk by moving all files, starting from the largest `FileId`,
     /// to the first available contiguous space with sufficient length to store the full file.
-    pub fn compact_non_fragmented(&mut self) {
+    pub fn compact_non_fragmented(&mut self) -> Result<(), Error> {
         let mut files: Vec<u64> = self
             .contents
             .values()
@@ -148,31 +150,31 @@ impl Disk {
         files.sort_unstable();
         files.reverse();
         for file_id in files {
-            let file_start = self.file_start(file_id).expect("Unable to find file start");
+            let file_start = self.file_start(file_id)?;
             let length = self.file_length(file_id);
-            if let Some(space) = self.next_empty_contiguous(0, length) {
+            if let Ok(space) = self.next_empty_contiguous(0, length) {
                 if space < file_start {
                     self.remove_file(file_id);
                     for position in space..(space + length) {
-                        self.contents.insert(position, Some(file_id));
+                        self.write(position, Some(file_id))?;
                     }
                 }
             }
         }
+        Ok(())
     }
 
     /// Calculates the disk checksum based on the positions and `FileId`s.
     #[allow(clippy::cast_possible_truncation)]
-    pub fn checksum(&self) -> usize {
+    pub fn checksum(&self) -> Result<usize, Error> {
         let mut checksum = 0;
         for position in 0..self.written {
-            match self.get(position) {
-                Some(Some(file_id)) => checksum += position * file_id,
-                Some(None) => continue,
-                None => unreachable!(),
+            match self.get(position)? {
+                Some(file_id) => checksum += position * file_id,
+                None => continue,
             }
         }
-        checksum as usize
+        Ok(checksum as usize)
     }
 }
 
@@ -181,15 +183,31 @@ impl Display for Disk {
         let mut string = String::new();
         // FIXME: this becomes messy for values over 9
         for n in 0..(self.written) {
-            match self.get(n) {
-                Some(Some(id)) => string.push_str(&id.to_string()),
-                Some(None) => string.push('.'),
-                None => panic!("Attempted to read uninitialized part of disk"),
+            match self
+                .get(n)
+                .unwrap_or_else(|_| panic!("{}", PositionNotFound.to_string()))
+            {
+                Some(id) => string.push_str(&id.to_string()),
+                None => string.push('.'),
             }
         }
         write!(f, "{string}")
     }
 }
+
+#[derive(thiserror::Error, Debug, PartialEq)]
+pub enum Error {
+    #[error("Position not found on disk")]
+    PositionNotFound,
+    #[error("File not found on disk")]
+    FileNotFound,
+    #[error("Empty space not found on disk")]
+    EmptyNotFound,
+    #[error("Write to disk failed")]
+    WriteFailed,
+}
+#[allow(clippy::enum_glob_use)]
+use Error::*;
 
 #[cfg(test)]
 mod test {
@@ -207,7 +225,7 @@ mod test {
     fn next_empty_0() {
         let parsed = crate::parse(INPUT);
         let next_empty = parsed.next_empty(0);
-        let expected = Some(2);
+        let expected = Ok(2);
         assert_eq!(next_empty, expected);
     }
 
@@ -215,7 +233,7 @@ mod test {
     fn next_empty_5() {
         let parsed = crate::parse(INPUT);
         let next_empty = parsed.next_empty(5);
-        let expected = Some(8);
+        let expected = Ok(8);
         assert_eq!(next_empty, expected);
     }
 
@@ -223,7 +241,7 @@ mod test {
     fn next_empty_contiguous_0_3() {
         let parsed = crate::parse(INPUT);
         let next_empty = parsed.next_empty_contiguous(0, 3);
-        let expected = Some(2);
+        let expected = Ok(2);
         assert_eq!(next_empty, expected);
     }
 
@@ -231,7 +249,7 @@ mod test {
     fn next_empty_contiguous_0_4() {
         let parsed = crate::parse(INPUT);
         let next_empty = parsed.next_empty_contiguous(0, 4);
-        let expected = None;
+        let expected = Err(crate::disk::Error::EmptyNotFound);
         assert_eq!(next_empty, expected);
     }
 
@@ -239,7 +257,7 @@ mod test {
     fn last_nonempty() {
         let parsed = crate::parse(INPUT);
         let last_nonempty = parsed.last_nonempty();
-        let expected = Some(41);
+        let expected = Ok(41);
         assert_eq!(last_nonempty, expected);
     }
 }
