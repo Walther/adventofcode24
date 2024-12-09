@@ -1,8 +1,8 @@
 use indicatif::{ParallelProgressIterator, ProgressStyle};
 use rayon::prelude::*;
 
-use shared::Direction::{E, N, S, W};
-use shared::{Coordinate, Maze, Visitor, VisitorOptions};
+use shared::maze::Direction::{E, N, S, W};
+use shared::maze::{Coordinate, Maze, Visitor, VisitorOptions};
 
 fn main() {
     const INPUT: &str = include_str!("input.txt");
@@ -86,7 +86,7 @@ fn guard_walk(maze: &Maze, coordinate: Coordinate) -> (usize, bool) {
 }
 
 #[cfg(test)]
-mod tests {
+mod integration {
     const INPUT: &str = r"....#.....
 .........#
 ..........
