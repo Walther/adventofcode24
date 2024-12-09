@@ -86,7 +86,7 @@ fn guard_walk(maze: &Maze, coordinate: Coordinate) -> (usize, bool) {
 }
 
 #[cfg(test)]
-mod tests {
+mod integration {
     const INPUT: &str = r"....#.....
 .........#
 ..........

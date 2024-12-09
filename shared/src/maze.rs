@@ -273,7 +273,7 @@ impl<'a> Visitor<'a> {
 }
 
 #[cfg(test)]
-mod test {
+mod unit {
     use super::*;
     const NUMPAD_MAZE_STR: &str = "123\n456\n789";
 

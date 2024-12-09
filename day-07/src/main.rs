@@ -73,9 +73,21 @@ fn operator_concat(a: usize, b: usize) -> usize {
 }
 
 #[cfg(test)]
-mod tests {
+mod unit {
     use crate::operator_concat;
 
+    #[test]
+    fn concatenation() {
+        let a = 123;
+        let b = 456;
+        let concat = operator_concat(a, b);
+        let expected = 123_456;
+        assert_eq!(concat, expected);
+    }
+}
+
+#[cfg(test)]
+mod integration {
     const INPUT: &str = r"190: 10 19
 3267: 81 40 27
 83: 17 5
@@ -101,14 +113,5 @@ mod tests {
         let value = crate::part2(&parsed);
         let expected = 11387;
         assert_eq!(value, expected);
-    }
-
-    #[test]
-    fn concatenation() {
-        let a = 123;
-        let b = 456;
-        let concat = operator_concat(a, b);
-        let expected = 123_456;
-        assert_eq!(concat, expected);
     }
 }

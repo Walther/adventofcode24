@@ -79,7 +79,7 @@ fn part2(data: &ParsedData) -> usize {
 }
 
 #[cfg(test)]
-mod tests {
+mod integration {
     const INPUT_1: &str =
         r"xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))";
     const INPUT_2: &str =

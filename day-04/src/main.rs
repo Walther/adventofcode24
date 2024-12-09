@@ -86,7 +86,7 @@ fn is_x_mas(map: [&char; 9]) -> bool {
 }
 
 #[cfg(test)]
-mod tests {
+mod integration {
     const INPUT: &str = r"MMMSXXMASM
 MSAMXMSMSA
 AMXSXMAAMM

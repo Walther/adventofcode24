@@ -210,7 +210,7 @@ pub enum Error {
 use Error::*;
 
 #[cfg(test)]
-mod test {
+mod unit {
     const INPUT: &str = r"2333133121414131402";
 
     #[test]

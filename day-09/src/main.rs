@@ -49,7 +49,7 @@ fn part2(data: &ParsedData) -> usize {
 }
 
 #[cfg(test)]
-mod tests {
+mod integration {
     const INPUT: &str = r"2333133121414131402";
 
     #[test]
