@@ -1,4 +1,7 @@
-use std::{collections::HashMap, str::FromStr};
+use std::{
+    collections::{HashMap, HashSet},
+    str::FromStr,
+};
 
 use itertools::Itertools;
 use nalgebra::{Point2, Vector2};
@@ -98,11 +101,13 @@ impl Direction {
 }
 
 pub struct Visitor<'a> {
-    pub(crate) options: VisitorOptions,
-    pub(crate) maze: &'a Maze,
-    pub(crate) coordinate: Coordinate,
-    pub(crate) visited: Vec<(Coordinate, Direction)>,
-    pub(crate) pockets: Vec<char>,
+    options: VisitorOptions,
+    maze: &'a Maze,
+    coordinate: Coordinate,
+    path: Vec<(Coordinate, Direction)>,
+    visited: HashSet<(Coordinate, Direction)>,
+    has_looped: bool,
+    pockets: Vec<char>,
 }
 
 #[derive(Default)]
@@ -114,16 +119,21 @@ pub struct VisitorOptions {
 impl<'a> Visitor<'a> {
     #[must_use]
     pub fn new(options: VisitorOptions, maze: &'a Maze, coordinate: Coordinate) -> Self {
-        let visited = match options.record_visited {
-            true => vec![(coordinate, N)],
-            false => Vec::new(),
+        let mut path = Vec::new();
+        let mut visited = HashSet::new();
+        let has_looped = false;
+        if options.record_visited {
+            path.push((coordinate, N));
+            visited.insert((coordinate, N));
         };
         let pockets = Vec::new();
         Self {
             options,
             maze,
             coordinate,
+            path,
             visited,
+            has_looped,
             pockets,
         }
     }
@@ -191,7 +201,11 @@ impl<'a> Visitor<'a> {
         self.coordinate.x = coordinate.x;
         self.coordinate.y = coordinate.y;
         if self.options.record_visited {
-            self.visited.push((coordinate, direction));
+            self.path.push((coordinate, direction));
+            let unique = self.visited.insert((coordinate, direction));
+            if !unique {
+                self.has_looped = true;
+            }
         }
         self.get()
     }
@@ -233,42 +247,23 @@ impl<'a> Visitor<'a> {
     #[must_use]
     pub fn path(&self) -> Option<&Vec<(Coordinate, Direction)>> {
         match self.options.record_visited {
-            true => Some(&self.visited),
+            true => Some(&self.path),
             false => None,
         }
     }
 
     #[must_use]
-    pub fn unique_visited(&self) -> Option<Vec<Coordinate>> {
-        let path = self.path()?;
-        Some(
-            path.iter()
-                .map(|(coordinate, _direction)| *coordinate)
-                .unique()
-                .collect(),
-        )
+    pub fn visited_coordinates(&self) -> Vec<Coordinate> {
+        self.visited
+            .iter()
+            .map(|(coordinate, _direction)| *coordinate)
+            .unique()
+            .collect()
     }
 
-    /// Checks that all visited location-direction pairs are unique.
-    ///
-    /// Computationally intense, slow!
     #[must_use]
-    pub fn has_looped(&self) -> Option<bool> {
-        if !self.options.record_visited {
-            return None;
-        };
-        Some(!self.visited.iter().all_unique())
-    }
-
-    /// Checks if the upcoming location-direction pair already exists in the visited list.
-    ///
-    /// Computationally faster than `has_looped`, but only checks the upcoming step.
-    #[must_use]
-    pub fn deja_vu(&self, direction: Direction) -> bool {
-        let Some(next) = self.coordinate_in_direction(direction) else {
-            return false;
-        };
-        self.visited.contains(&(next, direction))
+    pub fn has_looped(&self) -> bool {
+        self.has_looped
     }
 }
 
