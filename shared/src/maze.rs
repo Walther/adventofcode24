@@ -100,6 +100,7 @@ impl Direction {
     }
 }
 
+#[derive(Clone)]
 pub struct Visitor<'a> {
     options: VisitorOptions,
     maze: &'a Maze,
@@ -110,7 +111,7 @@ pub struct Visitor<'a> {
     pockets: Vec<char>,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct VisitorOptions {
     pub record_visited: bool,
     pub has_pockets: bool,
