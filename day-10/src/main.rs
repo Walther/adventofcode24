@@ -1,5 +1,7 @@
 use std::collections::HashSet;
 
+use itertools::Itertools;
+
 use shared::maze::{
     Coordinate,
     Direction::{E, N, S, W},
@@ -23,8 +25,7 @@ fn parse(input: &str) -> ParsedData {
     input.parse().expect("Unable to parse maze")
 }
 
-fn climb(maze: &Maze, coordinate: Coordinate, summits: &mut HashSet<Coordinate>) {
-    let visitor = Visitor::new(VisitorOptions::default(), maze, coordinate);
+fn climb<'a>(visitor: Visitor<'a>, summits: &mut HashSet<Coordinate>) -> Vec<Visitor<'a>> {
     let height: u32 = visitor
         .get()
         .expect("Visitor outside Maze")
@@ -32,34 +33,59 @@ fn climb(maze: &Maze, coordinate: Coordinate, summits: &mut HashSet<Coordinate>)
         .expect("Unknown height");
     if height == 9 {
         summits.insert(visitor.position());
+        return vec![visitor];
     }
+    let mut climbers = Vec::new();
     for direction in [N, W, E, S] {
         if let Some(h) = visitor.peek(direction) {
             if h.to_digit(10) == Some(height + 1) {
-                let next = visitor
-                    .coordinate_in_direction(direction)
-                    .expect("Unable to get coordinate after peeking");
-                climb(maze, next, summits);
+                let mut clone = visitor.clone();
+                clone.step(direction).expect("Unable to step after peek");
+                let mut recurse = climb(clone, summits);
+                climbers.append(&mut recurse);
             }
         }
     }
+    climbers
 }
 
 fn part1(data: &ParsedData) -> usize {
     let maze = data;
-    let trailheads = data.find_all('0');
+    let trailheads = maze.find_all('0');
     let mut score = 0;
     for coordinate in trailheads {
         let mut summits: HashSet<Coordinate> = HashSet::new();
-        climb(maze, coordinate, &mut summits);
+        let visitor = Visitor::new(VisitorOptions::default(), maze, coordinate);
+        let _ = climb(visitor, &mut summits);
         score += summits.len();
     }
 
     score
 }
 
-fn part2(_data: &ParsedData) -> usize {
-    2
+fn part2(data: &ParsedData) -> usize {
+    let maze = data;
+    let trailheads = maze.find_all('0');
+    let mut paths = 0;
+    for coordinate in trailheads {
+        let mut summits: HashSet<Coordinate> = HashSet::new();
+        let visitor = Visitor::new(
+            VisitorOptions {
+                record_visited: true,
+                ..Default::default()
+            },
+            maze,
+            coordinate,
+        );
+        let climbers = climb(visitor, &mut summits);
+        paths += climbers
+            .iter()
+            .map(|climber| climber.path().expect("Climber path not recorded"))
+            .unique()
+            .count();
+    }
+
+    paths
 }
 
 #[cfg(test)]
@@ -86,7 +112,7 @@ mod integration {
     fn part2() {
         let parsed = crate::parse(INPUT);
         let value = crate::part2(&parsed);
-        let expected = 2;
+        let expected = 81;
         assert_eq!(value, expected);
     }
 }
