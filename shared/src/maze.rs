@@ -231,18 +231,18 @@ impl<'a> Visitor<'a> {
     }
 
     #[must_use]
-    pub fn surroundings(&self) -> Option<[&char; 9]> {
-        Some([
-            self.peek(NW)?,
-            self.peek(N)?,
-            self.peek(NE)?,
-            self.peek(W)?,
-            self.get()?,
-            self.peek(E)?,
-            self.peek(SW)?,
-            self.peek(S)?,
-            self.peek(SE)?,
-        ])
+    pub fn surroundings(&self) -> [Option<&char>; 9] {
+        [
+            self.peek(NW),
+            self.peek(N),
+            self.peek(NE),
+            self.peek(W),
+            self.get(),
+            self.peek(E),
+            self.peek(SW),
+            self.peek(S),
+            self.peek(SE),
+        ]
     }
 
     #[must_use]
@@ -314,8 +314,18 @@ mod unit {
         let maze: Maze = NUMPAD_MAZE_STR.parse().expect("Unable to parse maze");
         let start: Coordinate = Coordinate::new(1, 1);
         let visitor = Visitor::new(VisitorOptions::default(), &maze, start);
-        let surroundings = visitor.surroundings().expect("No surroundings found");
-        let expected = [&'1', &'2', &'3', &'4', &'5', &'6', &'7', &'8', &'9'];
+        let surroundings = visitor.surroundings();
+        let expected = [
+            Some(&'1'),
+            Some(&'2'),
+            Some(&'3'),
+            Some(&'4'),
+            Some(&'5'),
+            Some(&'6'),
+            Some(&'7'),
+            Some(&'8'),
+            Some(&'9'),
+        ];
         assert_eq!(surroundings, expected);
     }
 }
