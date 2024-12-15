@@ -50,13 +50,8 @@ fn part2(data: &ParsedData) -> usize {
     for &coordinate in data.all_coordinates() {
         let visitor = Visitor::new(VisitorOptions::default(), data, coordinate);
         let surroundings = visitor.surroundings();
-        match surroundings {
-            Some(map) => {
-                if is_x_mas(map) {
-                    x_max_count += 1;
-                }
-            }
-            _ => continue,
+        if is_x_mas(surroundings) {
+            x_max_count += 1;
         }
     }
 
@@ -64,8 +59,23 @@ fn part2(data: &ParsedData) -> usize {
 }
 
 #[rustfmt::skip]
-fn is_x_mas(map: [&char; 9]) -> bool {
-    matches!(map,
+#[allow(clippy::many_single_char_names)]
+fn is_x_mas(surroundings: [Option<&char>; 9]) -> bool {
+    let surroundings = match surroundings {
+        [
+            Some(a),
+            Some(b),
+            Some(c),
+            Some(d),
+            Some(e),
+            Some(f),
+            Some(g),
+            Some(h),
+            Some(i),
+        ] => [a,b,c,d,e,f,g,h,i],
+        _ => return false,
+    };
+    matches!(surroundings,
         [
             'M', _, 'M',
             _,  'A',  _,
