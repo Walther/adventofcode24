@@ -43,3 +43,13 @@ mod integration {
         assert_eq!(value, expected);
     }
 }
+
+#[cfg(test)]
+mod unit {
+    #[test]
+    fn unit() {
+        let value;
+        let expected;
+        assert_eq(value, expected);
+    }
+}
