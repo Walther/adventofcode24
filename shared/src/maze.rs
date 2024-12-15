@@ -246,6 +246,11 @@ impl<'a> Visitor<'a> {
     }
 
     #[must_use]
+    pub fn surroundings_nwes(&self) -> [Option<&char>; 4] {
+        [self.peek(N), self.peek(W), self.peek(E), self.peek(S)]
+    }
+
+    #[must_use]
     pub fn path(&self) -> Option<&Vec<(Coordinate, Direction)>> {
         match self.options.record_visited {
             true => Some(&self.path),
@@ -265,6 +270,37 @@ impl<'a> Visitor<'a> {
     #[must_use]
     pub fn has_looped(&self) -> bool {
         self.has_looped
+    }
+
+    /// Returns the flood fill coordinates from this [`Visitor`].
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the color for the fill cannot be determined.
+    pub fn flood_nwes(&self) -> Result<HashSet<Coordinate>, String> {
+        let color = self.get().ok_or("Unable to choose visitor color")?;
+        let mut coordinates = HashSet::new();
+        coordinates.insert(self.position());
+        loop {
+            let before = coordinates.len();
+            for coordinate in coordinates.clone() {
+                let visitor = Visitor::new(VisitorOptions::default(), self.maze, coordinate);
+                for neighbor in [N, W, E, S]
+                    .iter()
+                    .filter_map(|&d| visitor.coordinate_in_direction(d))
+                {
+                    if !coordinates.contains(&neighbor) && self.maze.get(neighbor) == Some(color) {
+                        coordinates.insert(neighbor);
+                    }
+                }
+            }
+            let after = coordinates.len();
+            if before == after {
+                break;
+            }
+        }
+
+        Ok(coordinates)
     }
 }
 
