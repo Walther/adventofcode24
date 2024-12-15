@@ -1,0 +1,11 @@
+[package]
+name = "day-13"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+shared = { path = "../shared/" }
+thiserror = "2.0.7"
+
+[lints]
+workspace = true

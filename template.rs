@@ -48,8 +48,8 @@ mod integration {
 mod unit {
     #[test]
     fn unit() {
-        let value;
-        let expected;
-        assert_eq(value, expected);
+        let value = 0;
+        let expected = 0;
+        assert_eq!(value, expected);
     }
 }
