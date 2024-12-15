@@ -78,7 +78,7 @@ Prize: X=18641, Y=10279
     fn part2() {
         let parsed = crate::parse(INPUT);
         let value = crate::part2(&parsed);
-        let expected = 875318608908;
+        let expected = 875_318_608_908;
         assert_eq!(value, expected);
     }
 }
