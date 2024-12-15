@@ -1,4 +1,5 @@
 use arcade::ClawMachine;
+use shared::maze::Displacement;
 
 pub mod arcade;
 
@@ -32,8 +33,18 @@ fn part1(data: &ParsedData) -> usize {
     cost
 }
 
-fn part2(_data: &ParsedData) -> usize {
-    2
+fn part2(data: &ParsedData) -> usize {
+    let displacement = Displacement::new(10_000_000_000_000, 10_000_000_000_000);
+    let mut machines = data.clone();
+    machines
+        .iter_mut()
+        .for_each(|machine| machine.move_prize(displacement));
+    let cost: usize = machines
+        .iter()
+        .filter_map(ClawMachine::minimal_solve_cost)
+        .sum();
+
+    cost
 }
 
 #[cfg(test)]
@@ -67,7 +78,7 @@ Prize: X=18641, Y=10279
     fn part2() {
         let parsed = crate::parse(INPUT);
         let value = crate::part2(&parsed);
-        let expected = 2;
+        let expected = 875318608908;
         assert_eq!(value, expected);
     }
 }
