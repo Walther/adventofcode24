@@ -80,9 +80,43 @@ pub struct ClawMachine {
     a: Displacement,
     b: Displacement,
     prize: Coordinate,
+    claw: Coordinate,
+    tokens: usize,
 }
 
 impl ClawMachine {
+    pub fn press_a(&mut self) {
+        self.tokens += 3;
+        self.claw += self.a;
+    }
+
+    pub fn press_b(&mut self) {
+        self.tokens += 1;
+        self.claw += self.b;
+    }
+
+    #[allow(clippy::cast_possible_wrap)]
+    pub fn multi_press_a(&mut self, n: usize) {
+        self.tokens += n * 3;
+        self.claw += (n as isize) * self.a;
+    }
+
+    #[allow(clippy::cast_possible_wrap)]
+    pub fn multi_press_b(&mut self, n: usize) {
+        self.tokens += n;
+        self.claw += (n as isize) * self.b;
+    }
+
+    #[must_use]
+    pub fn on_prize(&self) -> bool {
+        self.claw.x == self.prize.x && self.claw.y == self.prize.y
+    }
+
+    #[must_use]
+    pub fn missed_prize(&self) -> bool {
+        self.claw.x > self.prize.x || self.claw.y > self.prize.y
+    }
+
     #[must_use]
     #[allow(clippy::cast_sign_loss)]
     fn minimal_presses(&self) -> Option<(usize, usize)> {
@@ -148,6 +182,8 @@ impl FromStr for ClawMachine {
             a: a.effect,
             b: b.effect,
             prize: prize.location,
+            claw: Coordinate::new(0, 0),
+            tokens: 0,
         })
     }
 }
