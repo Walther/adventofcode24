@@ -69,7 +69,7 @@ p=9,5 v=-3,-3
     fn part2() {
         let parsed = crate::parse(INPUT);
         let value = crate::part2(&parsed);
-        let expected = 0; // NOTE: no easter egg in test input
+        let expected = 1; // NOTE: no visible easter egg in test input
         assert_eq!(value, expected);
     }
 }
