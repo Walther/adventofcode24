@@ -1,8 +1,11 @@
 use indicatif::{ParallelProgressIterator, ProgressStyle};
 use rayon::prelude::*;
 
-use shared::maze::Direction::{E, N, S, W};
-use shared::maze::{Coordinate, Maze, Visitor, VisitorOptions};
+use shared::{
+    Coordinate,
+    Direction::{E, N, S, W},
+    Maze, Visitor,
+};
 
 fn main() {
     const INPUT: &str = include_str!("input.txt");
@@ -56,11 +59,7 @@ fn part2(data: &ParsedData) -> usize {
 }
 
 fn guard_walk(maze: &Maze, coordinate: Coordinate) -> (usize, bool) {
-    let visitor_options = VisitorOptions {
-        record_visited: true,
-        ..Default::default()
-    };
-    let mut guard = Visitor::new(visitor_options, maze, coordinate);
+    let mut guard = Visitor::new(maze, coordinate);
     let walk_directions = [N, E, S, W];
     let mut direction_index = 0;
     let mut direction = walk_directions[direction_index];

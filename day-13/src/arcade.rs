@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use nalgebra::{Matrix, Matrix2};
-use shared::maze::{Coordinate, Displacement};
+use shared::{Coordinate, Displacement};
 
 struct Button {
     pub effect: Displacement,

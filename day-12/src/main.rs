@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use shared::maze::{Coordinate, Maze, Visitor, VisitorOptions};
+use shared::{Coordinate, Maze, Visitor};
 
 fn main() {
     const INPUT: &str = include_str!("input.txt");
@@ -37,7 +37,7 @@ impl Plot<'_> {
         self.coordinates
             .iter()
             .map(|&coordinate| {
-                let visitor = Visitor::new(VisitorOptions::default(), self.farm, coordinate);
+                let visitor = Visitor::new(self.farm, coordinate);
                 let plant = visitor.get().expect("Unknown plant");
                 visitor
                     .surroundings_nwes()
@@ -61,7 +61,7 @@ fn part1(data: &ParsedData) -> usize {
             continue;
         }
 
-        let visitor = Visitor::new(VisitorOptions::default(), farm, *coordinate);
+        let visitor = Visitor::new(farm, *coordinate);
         let coordinates = visitor
             .flood_nwes()
             .expect("Unable to flood fill garden plot");
@@ -113,7 +113,7 @@ MMMISSJEEE
 mod unit {
     use std::collections::HashSet;
 
-    use shared::maze::Coordinate;
+    use shared::Coordinate;
 
     use crate::Plot;
 

@@ -2,10 +2,10 @@ use std::collections::HashSet;
 
 use itertools::Itertools;
 
-use shared::maze::{
+use shared::{
     Coordinate,
     Direction::{E, N, S, W},
-    Maze, Visitor, VisitorOptions,
+    Maze, Visitor,
 };
 
 fn main() {
@@ -55,7 +55,7 @@ fn part1(data: &ParsedData) -> usize {
     let mut score = 0;
     for coordinate in trailheads {
         let mut summits: HashSet<Coordinate> = HashSet::new();
-        let visitor = Visitor::new(VisitorOptions::default(), maze, coordinate);
+        let visitor = Visitor::new(maze, coordinate);
         let _ = climb(visitor, &mut summits);
         score += summits.len();
     }
@@ -69,20 +69,9 @@ fn part2(data: &ParsedData) -> usize {
     let mut paths = 0;
     for coordinate in trailheads {
         let mut summits: HashSet<Coordinate> = HashSet::new();
-        let visitor = Visitor::new(
-            VisitorOptions {
-                record_visited: true,
-                ..Default::default()
-            },
-            maze,
-            coordinate,
-        );
+        let visitor = Visitor::new(maze, coordinate);
         let climbers = climb(visitor, &mut summits);
-        paths += climbers
-            .iter()
-            .map(|climber| climber.path().expect("Climber path not recorded"))
-            .unique()
-            .count();
+        paths += climbers.iter().map(Visitor::path).unique().count();
     }
 
     paths
