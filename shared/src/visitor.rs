@@ -56,6 +56,18 @@ impl Visitor {
             .get(self.coordinate)
     }
 
+    pub fn sudo_upsert(&mut self, coordinate: Coordinate, character: char) {
+        self.maze
+            .lock()
+            .expect("Failed to acquire lock")
+            .upsert(coordinate, character);
+    }
+
+    #[must_use]
+    pub fn get_maze(&self) -> Arc<Mutex<Maze>> {
+        self.maze.clone()
+    }
+
     #[must_use]
     pub fn coordinate_in_direction(&self, direction: Direction) -> Option<Coordinate> {
         let x;
@@ -105,6 +117,32 @@ impl Visitor {
             .lock()
             .expect("Failed to acquire lock")
             .get(coordinate)
+    }
+
+    #[must_use]
+    pub fn distance_to(&self, search: char, direction: Direction) -> Option<usize> {
+        let mut ghost = self.clone();
+        let mut distance = 0;
+        while let Some(c) = ghost.step(direction) {
+            distance += 1;
+            if c == search {
+                return Some(distance);
+            }
+        }
+        None
+    }
+
+    #[must_use]
+    pub fn coordinate_in_distance(
+        &self,
+        distance: usize,
+        direction: Direction,
+    ) -> Option<Coordinate> {
+        let mut ghost = self.clone();
+        for _ in 0..distance {
+            ghost.step(direction)?;
+        }
+        Some(ghost.position())
     }
 
     pub fn step(&mut self, direction: Direction) -> Option<char> {
