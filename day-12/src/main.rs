@@ -75,7 +75,7 @@ fn part1(data: &ParsedData) -> usize {
 }
 
 fn part2(_data: &ParsedData) -> usize {
-    2
+    0
 }
 
 #[cfg(test)]
@@ -104,7 +104,7 @@ MMMISSJEEE
     fn part2() {
         let parsed = crate::parse(INPUT);
         let value = crate::part2(&parsed);
-        let expected = 2;
+        let expected = 0;
         assert_eq!(value, expected);
     }
 }
