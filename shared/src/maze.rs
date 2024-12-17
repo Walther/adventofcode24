@@ -1,4 +1,8 @@
-use std::{collections::HashMap, str::FromStr};
+use std::{
+    collections::HashMap,
+    str::FromStr,
+    sync::{Arc, Mutex},
+};
 
 use nalgebra::Point2;
 
@@ -32,8 +36,8 @@ impl FromStr for Maze {
 
 impl Maze {
     #[must_use]
-    pub fn all_coordinates(&self) -> Vec<&Coordinate> {
-        self.maze.keys().collect()
+    pub fn all_coordinates(&self) -> Vec<Coordinate> {
+        self.maze.keys().copied().collect()
     }
 
     #[must_use]
@@ -66,8 +70,8 @@ impl Maze {
     }
 
     #[must_use]
-    pub fn get(&self, coordinate: Coordinate) -> Option<&char> {
-        self.maze.get(&coordinate)
+    pub fn get(&self, coordinate: Coordinate) -> Option<char> {
+        self.maze.get(&coordinate).copied()
     }
 
     pub fn upsert(&mut self, coordinate: Coordinate, v: char) -> Option<char> {
@@ -77,5 +81,10 @@ impl Maze {
     #[must_use]
     pub fn contains_coordinate(&self, coordinate: Coordinate) -> bool {
         self.maze.contains_key(&coordinate)
+    }
+
+    #[must_use]
+    pub fn make_shareable(self) -> Arc<Mutex<Self>> {
+        Arc::new(Mutex::new(self))
     }
 }

@@ -1,4 +1,9 @@
-use std::collections::HashSet;
+#![allow(clippy::missing_panics_doc)] // TODO: fix various .expects()
+
+use std::{
+    collections::HashSet,
+    sync::{Arc, Mutex},
+};
 
 use itertools::Itertools;
 
@@ -9,8 +14,8 @@ use crate::{
 };
 
 #[derive(Clone)]
-pub struct Visitor<'a> {
-    maze: &'a Maze,
+pub struct Visitor {
+    maze: Arc<Mutex<Maze>>,
     coordinate: Coordinate,
     path: Vec<(Coordinate, Direction)>,
     visited: HashSet<(Coordinate, Direction)>,
@@ -18,9 +23,10 @@ pub struct Visitor<'a> {
     pockets: Vec<char>,
 }
 
-impl<'a> Visitor<'a> {
+impl Visitor {
     #[must_use]
-    pub fn new(maze: &'a Maze, coordinate: Coordinate) -> Self {
+    pub fn new(maze: &Arc<Mutex<Maze>>, coordinate: Coordinate) -> Self {
+        let maze = maze.clone();
         let mut path = Vec::new();
         let mut visited = HashSet::new();
         let has_looped = false;
@@ -43,8 +49,11 @@ impl<'a> Visitor<'a> {
     }
 
     #[must_use]
-    pub fn get(&self) -> Option<&char> {
-        self.maze.get(self.coordinate)
+    pub fn get(&self) -> Option<char> {
+        self.maze
+            .lock()
+            .expect("Failed to acquire lock")
+            .get(self.coordinate)
     }
 
     #[must_use]
@@ -90,12 +99,15 @@ impl<'a> Visitor<'a> {
     }
 
     #[must_use]
-    pub fn peek(&self, direction: Direction) -> Option<&char> {
+    pub fn peek(&self, direction: Direction) -> Option<char> {
         let coordinate = self.coordinate_in_direction(direction)?;
-        self.maze.get(coordinate)
+        self.maze
+            .lock()
+            .expect("Failed to acquire lock")
+            .get(coordinate)
     }
 
-    pub fn step(&mut self, direction: Direction) -> Option<&char> {
+    pub fn step(&mut self, direction: Direction) -> Option<char> {
         let coordinate = self.coordinate_in_direction(direction)?;
         self.coordinate.x = coordinate.x;
         self.coordinate.y = coordinate.y;
@@ -112,7 +124,7 @@ impl<'a> Visitor<'a> {
     pub fn collect(&mut self, max_length: usize, direction: Direction) -> Option<&Vec<char>> {
         while self.pockets.len() < max_length {
             let grab = self.get()?;
-            self.pockets.push(*grab);
+            self.pockets.push(grab);
             match self.peek(direction) {
                 Some(_) => {
                     self.step(direction);
@@ -125,7 +137,7 @@ impl<'a> Visitor<'a> {
     }
 
     #[must_use]
-    pub fn surroundings(&self) -> [Option<&char>; 9] {
+    pub fn surroundings(&self) -> [Option<char>; 9] {
         [
             self.peek(NW),
             self.peek(N),
@@ -140,7 +152,7 @@ impl<'a> Visitor<'a> {
     }
 
     #[must_use]
-    pub fn surroundings_nwes(&self) -> [Option<&char>; 4] {
+    pub fn surroundings_nwes(&self) -> [Option<char>; 4] {
         [self.peek(N), self.peek(W), self.peek(E), self.peek(S)]
     }
 
@@ -175,12 +187,19 @@ impl<'a> Visitor<'a> {
         loop {
             let before = coordinates.len();
             for coordinate in coordinates.clone() {
-                let visitor = Visitor::new(self.maze, coordinate);
+                let visitor = Visitor::new(&self.maze.clone(), coordinate);
                 for neighbor in [N, W, E, S]
                     .iter()
                     .filter_map(|&d| visitor.coordinate_in_direction(d))
                 {
-                    if !coordinates.contains(&neighbor) && self.maze.get(neighbor) == Some(color) {
+                    if !coordinates.contains(&neighbor)
+                        && self
+                            .maze
+                            .lock()
+                            .expect("Unable to acquire lock")
+                            .get(neighbor)
+                            == Some(color)
+                    {
                         coordinates.insert(neighbor);
                     }
                 }
@@ -202,20 +221,23 @@ pub(crate) mod unit {
 
     #[test]
     fn surroundings() {
-        let maze: Maze = NUMPAD_MAZE_STR.parse().expect("Unable to parse maze");
+        let maze: Arc<Mutex<Maze>> = NUMPAD_MAZE_STR
+            .parse::<Maze>()
+            .expect("Unable to parse maze")
+            .make_shareable();
         let start: Coordinate = Coordinate::new(1, 1);
         let visitor = Visitor::new(&maze, start);
         let surroundings = visitor.surroundings();
         let expected = [
-            Some(&'1'),
-            Some(&'2'),
-            Some(&'3'),
-            Some(&'4'),
-            Some(&'5'),
-            Some(&'6'),
-            Some(&'7'),
-            Some(&'8'),
-            Some(&'9'),
+            Some('1'),
+            Some('2'),
+            Some('3'),
+            Some('4'),
+            Some('5'),
+            Some('6'),
+            Some('7'),
+            Some('8'),
+            Some('9'),
         ];
         assert_eq!(surroundings, expected);
     }

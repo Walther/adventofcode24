@@ -1,7 +1,7 @@
 #[rustfmt::skip]
 use Direction::{NW, N, NE, W, E, SW, S, SE};
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Direction {
     NW,
     N,

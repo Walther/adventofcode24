@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use shared::{Maze, Coordinate, Displacement};
+use shared::{Coordinate, Displacement, Maze};
 use std::collections::HashSet;
 
 fn main() {

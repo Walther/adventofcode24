@@ -21,9 +21,10 @@ fn part1(data: &ParsedData) -> usize {
     let maze = data.clone();
     let mut xmas_count = 0;
     let letter_x_coordinates: Vec<Coordinate> = maze.find_all('X');
+    let maze = maze.make_shareable();
     for coordinate in letter_x_coordinates {
         for direction in Direction::iter() {
-            let mut visitor = Visitor::new(&maze, coordinate);
+            let mut visitor = Visitor::new(&maze.clone(), coordinate);
             let collection = visitor.collect(4, direction);
             match collection {
                 Some(collection) => {
@@ -41,8 +42,11 @@ fn part1(data: &ParsedData) -> usize {
 
 fn part2(data: &ParsedData) -> usize {
     let mut x_max_count = 0;
-    for &coordinate in data.all_coordinates() {
-        let visitor = Visitor::new(data, coordinate);
+    let maze = data.clone();
+    let all_coordinates = maze.all_coordinates();
+    let maze = maze.make_shareable();
+    for coordinate in all_coordinates {
+        let visitor = Visitor::new(&maze.clone(), coordinate);
         let surroundings = visitor.surroundings();
         if is_x_mas(surroundings) {
             x_max_count += 1;
@@ -54,7 +58,7 @@ fn part2(data: &ParsedData) -> usize {
 
 #[rustfmt::skip]
 #[allow(clippy::many_single_char_names)]
-fn is_x_mas(surroundings: [Option<&char>; 9]) -> bool {
+fn is_x_mas(surroundings: [Option<char>; 9]) -> bool {
     let surroundings = match surroundings {
         [
             Some(a),

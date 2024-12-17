@@ -29,7 +29,7 @@ fn part1(data: &ParsedData) -> usize {
     let start = maze
         .find_replace('^', '.')
         .expect("Unable to find guard in maze");
-    let (steps, _has_looped) = guard_walk(&maze, start);
+    let (steps, _has_looped) = guard_walk(maze, start);
     steps
 }
 
@@ -43,23 +43,22 @@ fn part2(data: &ParsedData) -> usize {
             "Elapsed:   {elapsed_precise}\nProgress:  {bar} {pos}/{len}\nRemaining: {eta_precise}",
         )
         .expect("Unable to create progress bar style");
-    let loops = maze
-        .all_coordinates()
+
+    maze.all_coordinates()
         .into_par_iter()
         .progress_with_style(style)
         .filter(|&coordinate| {
             let mut obstructed_maze = maze.clone();
-            obstructed_maze.upsert(*coordinate, '#');
-            let (_steps, has_looped) = guard_walk(&obstructed_maze, start);
+            obstructed_maze.upsert(coordinate, '#');
+            let (_steps, has_looped) = guard_walk(obstructed_maze, start);
             has_looped
         })
-        .count();
-
-    loops
+        .count()
 }
 
-fn guard_walk(maze: &Maze, coordinate: Coordinate) -> (usize, bool) {
-    let mut guard = Visitor::new(maze, coordinate);
+fn guard_walk(maze: Maze, coordinate: Coordinate) -> (usize, bool) {
+    let maze = maze.make_shareable();
+    let mut guard = Visitor::new(&maze.clone(), coordinate);
     let walk_directions = [N, E, S, W];
     let mut direction_index = 0;
     let mut direction = walk_directions[direction_index];
@@ -69,7 +68,7 @@ fn guard_walk(maze: &Maze, coordinate: Coordinate) -> (usize, bool) {
             has_looped = true;
             break;
         }
-        if *forward == '#' {
+        if forward == '#' {
             direction_index = (direction_index + 1) % walk_directions.len();
             direction = walk_directions[direction_index];
             continue;
