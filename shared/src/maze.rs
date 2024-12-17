@@ -13,9 +13,9 @@ pub type Coordinate = Point2<isize>;
 
 pub type Displacement = Vector2<isize>;
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Maze {
-    pub(crate) maze: HashMap<Point2<isize>, char>,
+    maze: HashMap<Point2<isize>, char>,
 }
 
 impl FromStr for Maze {
