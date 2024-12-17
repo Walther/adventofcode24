@@ -68,6 +68,13 @@ impl Maze {
     }
 
     #[must_use]
+    pub fn find_replace(&mut self, search: char, replace: char) -> Option<Coordinate> {
+        let (&coordinate, _) = self.maze.iter().find(|&(_coord, ch)| *ch == search)?;
+        self.upsert(coordinate, replace)?;
+        Some(coordinate)
+    }
+
+    #[must_use]
     pub fn get(&self, coordinate: Coordinate) -> Option<&char> {
         self.maze.get(&coordinate)
     }

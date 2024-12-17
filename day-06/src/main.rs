@@ -22,13 +22,19 @@ fn parse(input: &str) -> ParsedData {
 }
 
 fn part1(data: &ParsedData) -> usize {
-    let (maze, start) = remove_guard_marker(data);
+    let mut maze = data.clone();
+    let start = maze
+        .find_replace('^', '.')
+        .expect("Unable to find guard in maze");
     let (steps, _has_looped) = guard_walk(&maze, start);
     steps
 }
 
 fn part2(data: &ParsedData) -> usize {
-    let (maze, start) = remove_guard_marker(data);
+    let mut maze = data.clone();
+    let start = maze
+        .find_replace('^', '.')
+        .expect("Unable to find guard in maze");
     let style = ProgressStyle::default_bar()
         .template(
             "Elapsed:   {elapsed_precise}\nProgress:  {bar} {pos}/{len}\nRemaining: {eta_precise}",
@@ -47,13 +53,6 @@ fn part2(data: &ParsedData) -> usize {
         .count();
 
     loops
-}
-
-fn remove_guard_marker(data: &Maze) -> (Maze, Coordinate) {
-    let mut maze = data.clone();
-    let coordinate = maze.find('^').expect("Unable to find guard in the maze");
-    maze.upsert(coordinate, '.');
-    (maze, coordinate)
 }
 
 fn guard_walk(maze: &Maze, coordinate: Coordinate) -> (usize, bool) {
