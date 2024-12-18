@@ -1,5 +1,5 @@
 use arcade::ClawMachine;
-use shared::maze::Displacement;
+use shared::Displacement;
 
 pub mod arcade;
 

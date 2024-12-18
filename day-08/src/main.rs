@@ -1,7 +1,6 @@
 use itertools::Itertools;
+use shared::{Coordinate, Displacement, Maze};
 use std::collections::HashSet;
-
-use shared::maze::{Coordinate, Displacement, Maze};
 
 fn main() {
     const INPUT: &str = include_str!("input.txt");

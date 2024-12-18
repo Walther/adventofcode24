@@ -1,7 +1,5 @@
 use itertools::Itertools;
-use shared::maze::Coordinate;
-use shared::maze::Displacement;
-use shared::maze::Maze;
+use shared::{Coordinate, Displacement, Maze};
 
 #[cfg(test)]
 pub(crate) const BATHROOM_WIDTH: isize = 11;
@@ -100,7 +98,7 @@ pub fn print_bathroom(robots: &[Robot]) {
 #[cfg(test)]
 mod unit {
     use crate::robot::{safety_score, Robot};
-    use shared::maze::{Coordinate, Displacement};
+    use shared::{Coordinate, Displacement};
 
     #[test]
     fn quad_4() {

@@ -16,11 +16,11 @@ fn parse(_input: &str) -> ParsedData {
 }
 
 fn part1(_data: &ParsedData) -> usize {
-    1
+    0
 }
 
 fn part2(_data: &ParsedData) -> usize {
-    2
+    0
 }
 
 #[cfg(test)]
@@ -31,7 +31,7 @@ mod integration {
     fn part1() {
         let parsed = crate::parse(INPUT);
         let value = crate::part1(&parsed);
-        let expected = 1;
+        let expected = 0;
         assert_eq!(value, expected);
     }
 
@@ -39,7 +39,7 @@ mod integration {
     fn part2() {
         let parsed = crate::parse(INPUT);
         let value = crate::part2(&parsed);
-        let expected = 2;
+        let expected = 0;
         assert_eq!(value, expected);
     }
 }

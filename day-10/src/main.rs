@@ -2,10 +2,10 @@ use std::collections::HashSet;
 
 use itertools::Itertools;
 
-use shared::maze::{
+use shared::{
     Coordinate,
     Direction::{E, N, S, W},
-    Maze, Visitor, VisitorOptions,
+    Maze, Visitor,
 };
 
 fn main() {
@@ -25,7 +25,7 @@ fn parse(input: &str) -> ParsedData {
     input.parse().expect("Unable to parse maze")
 }
 
-fn climb<'a>(visitor: Visitor<'a>, summits: &mut HashSet<Coordinate>) -> Vec<Visitor<'a>> {
+fn climb(visitor: Visitor, summits: &mut HashSet<Coordinate>) -> Vec<Visitor> {
     let height: u32 = visitor
         .get()
         .expect("Visitor outside Maze")
@@ -50,12 +50,13 @@ fn climb<'a>(visitor: Visitor<'a>, summits: &mut HashSet<Coordinate>) -> Vec<Vis
 }
 
 fn part1(data: &ParsedData) -> usize {
-    let maze = data;
+    let maze = data.clone();
     let trailheads = maze.find_all('0');
     let mut score = 0;
+    let maze = maze.make_shareable();
     for coordinate in trailheads {
         let mut summits: HashSet<Coordinate> = HashSet::new();
-        let visitor = Visitor::new(VisitorOptions::default(), maze, coordinate);
+        let visitor = Visitor::new(&maze.clone(), coordinate);
         let _ = climb(visitor, &mut summits);
         score += summits.len();
     }
@@ -64,25 +65,15 @@ fn part1(data: &ParsedData) -> usize {
 }
 
 fn part2(data: &ParsedData) -> usize {
-    let maze = data;
+    let maze = data.clone();
     let trailheads = maze.find_all('0');
     let mut paths = 0;
+    let maze = maze.make_shareable();
     for coordinate in trailheads {
         let mut summits: HashSet<Coordinate> = HashSet::new();
-        let visitor = Visitor::new(
-            VisitorOptions {
-                record_visited: true,
-                ..Default::default()
-            },
-            maze,
-            coordinate,
-        );
+        let visitor = Visitor::new(&maze.clone(), coordinate);
         let climbers = climb(visitor, &mut summits);
-        paths += climbers
-            .iter()
-            .map(|climber| climber.path().expect("Climber path not recorded"))
-            .unique()
-            .count();
+        paths += climbers.iter().map(Visitor::path).unique().count();
     }
 
     paths

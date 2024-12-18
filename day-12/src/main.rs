@@ -1,6 +1,9 @@
-use std::collections::HashSet;
+use std::{
+    collections::HashSet,
+    sync::{Arc, Mutex},
+};
 
-use shared::maze::{Coordinate, Maze, Visitor, VisitorOptions};
+use shared::{Coordinate, Maze, Visitor};
 
 fn main() {
     const INPUT: &str = include_str!("input.txt");
@@ -21,7 +24,7 @@ fn parse(input: &str) -> ParsedData {
 
 struct Plot<'farm> {
     coordinates: HashSet<Coordinate>,
-    farm: &'farm Maze,
+    farm: &'farm Arc<Mutex<Maze>>,
 }
 
 impl Plot<'_> {
@@ -37,7 +40,7 @@ impl Plot<'_> {
         self.coordinates
             .iter()
             .map(|&coordinate| {
-                let visitor = Visitor::new(VisitorOptions::default(), self.farm, coordinate);
+                let visitor = Visitor::new(self.farm, coordinate);
                 let plant = visitor.get().expect("Unknown plant");
                 visitor
                     .surroundings_nwes()
@@ -54,18 +57,23 @@ impl Plot<'_> {
 }
 
 fn part1(data: &ParsedData) -> usize {
-    let farm = data;
+    let farm = data.clone();
     let mut plots: Vec<Plot> = Vec::new();
-    for coordinate in farm.all_coordinates() {
-        if plots.iter().any(|plot| plot.contains(coordinate)) {
+    let all_coordinates = farm.all_coordinates();
+    let farm = farm.make_shareable();
+    for coordinate in all_coordinates {
+        if plots.iter().any(|plot| plot.contains(&coordinate)) {
             continue;
         }
 
-        let visitor = Visitor::new(VisitorOptions::default(), farm, *coordinate);
+        let visitor = Visitor::new(&farm.clone(), coordinate);
         let coordinates = visitor
             .flood_nwes()
             .expect("Unable to flood fill garden plot");
-        let plot = Plot { coordinates, farm };
+        let plot = Plot {
+            coordinates,
+            farm: &farm,
+        };
         plots.push(plot);
     }
 
@@ -75,7 +83,7 @@ fn part1(data: &ParsedData) -> usize {
 }
 
 fn part2(_data: &ParsedData) -> usize {
-    2
+    0
 }
 
 #[cfg(test)]
@@ -104,7 +112,7 @@ MMMISSJEEE
     fn part2() {
         let parsed = crate::parse(INPUT);
         let value = crate::part2(&parsed);
-        let expected = 2;
+        let expected = 0;
         assert_eq!(value, expected);
     }
 }
@@ -113,7 +121,7 @@ MMMISSJEEE
 mod unit {
     use std::collections::HashSet;
 
-    use shared::maze::Coordinate;
+    use shared::Coordinate;
 
     use crate::Plot;
 
@@ -126,6 +134,7 @@ EEEC
     #[test]
     fn area() {
         let farm = crate::parse(INPUT);
+        let farm = farm.make_shareable();
         let plot = Plot {
             coordinates: HashSet::from([
                 Coordinate::new(0, 0),
@@ -144,6 +153,7 @@ EEEC
     #[test]
     fn perimeter() {
         let farm = crate::parse(INPUT);
+        let farm = farm.make_shareable();
         let plot = Plot {
             coordinates: HashSet::from([
                 Coordinate::new(0, 0),
