@@ -195,6 +195,19 @@ impl Visitor {
     }
 
     #[must_use]
+    pub fn coordinates_nwes(&self) -> Vec<Coordinate> {
+        [
+            self.coordinate_in_direction(N),
+            self.coordinate_in_direction(W),
+            self.coordinate_in_direction(E),
+            self.coordinate_in_direction(S),
+        ]
+        .into_iter()
+        .flatten()
+        .collect()
+    }
+
+    #[must_use]
     pub fn path(&self) -> &Vec<(Coordinate, Direction)> {
         &self.path
     }
@@ -278,5 +291,23 @@ pub(crate) mod unit {
             Some('9'),
         ];
         assert_eq!(surroundings, expected);
+    }
+
+    #[test]
+    fn coordinates_nwes() {
+        let maze: Arc<Mutex<Maze>> = NUMPAD_MAZE_STR
+            .parse::<Maze>()
+            .expect("Unable to parse maze")
+            .make_shareable();
+        let start: Coordinate = Coordinate::new(1, 1);
+        let visitor = Visitor::new(&maze, start);
+        let coordinates_nwes = visitor.coordinates_nwes();
+        let expected = [
+            Coordinate::new(1, 0),
+            Coordinate::new(0, 1),
+            Coordinate::new(2, 1),
+            Coordinate::new(1, 2),
+        ];
+        assert_eq!(coordinates_nwes, expected);
     }
 }
