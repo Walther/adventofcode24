@@ -81,7 +81,7 @@ impl Memory {
     #[must_use]
     pub fn has_path_after_n_bytes(n: usize, bytes: &[Coordinate]) -> bool {
         let mut memory = Memory::new();
-        memory.add_bytes(&bytes[0..n + 1]);
+        memory.add_bytes(&bytes[0..=n]);
         memory.shortest_path().is_some()
     }
 
