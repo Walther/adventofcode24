@@ -34,12 +34,12 @@ impl TryFrom<&str> for Robot {
     // FIXME: sometimes ? can be really nice, sometimes stuff mixing options and results becomes a pain
     fn try_from(line: &str) -> Result<Self, Self::Error> {
         let (position, velocity) = line.split_once(' ').expect("Robot parse error");
-        let (_tag, position) = position.split_once("p=").expect("Robot parse error");
+        let position = position.strip_prefix("p=").expect("Robot parse error");
         let (x, y) = position.split_once(',').expect("Robot parse error");
         let x: isize = x.parse().expect("Robot parse error");
         let y: isize = y.parse().expect("Robot parse error");
 
-        let (_tag, velocity) = velocity.split_once("v=").expect("Robot parse error");
+        let velocity = velocity.strip_prefix("v=").expect("Robot parse error");
         let (dx, dy) = velocity.split_once(',').expect("Robot parse error");
         let dx: isize = dx.parse().expect("Robot parse error");
         let dy: isize = dy.parse().expect("Robot parse error");
