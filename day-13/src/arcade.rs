@@ -21,9 +21,9 @@ impl FromStr for Button {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (_name, rest) = s.split_once(": ").ok_or(ParseError::Button)?;
+        let (_name, xy) = s.split_once(": ").ok_or(ParseError::Button)?;
 
-        let Some((x, y)) = parse_xy(rest) else {
+        let Some((x, y)) = parse_xy(xy) else {
             return Err(ParseError::Button);
         };
 
@@ -36,8 +36,8 @@ impl FromStr for Button {
 // FIXME: ugly parsing :<
 fn parse_xy(s: &str) -> Option<(isize, isize)> {
     let (mut x, mut y) = s.split_once(", ")?;
-    (_, x) = x.split_once('X')?;
-    (_, y) = y.split_once('Y')?;
+    x = x.strip_prefix('X')?;
+    y = y.strip_prefix('Y')?;
     if x.starts_with('=') {
         x = &x[1..];
     };
